@@ -11,6 +11,7 @@ import {
   getReaderSettings, updateReaderSetting, type ReaderSettings,
   isFavorite, toggleFavorite,
 } from "../lib/reader-storage";
+import { useJsonLd, buildChapterJsonLd, buildBreadcrumbJsonLd } from "../lib/jsonld";
 
 function renderParagraph(p: string, i: number) {
   if (/<\w+[^>]*>/.test(p)) {
@@ -133,6 +134,16 @@ export default function ChapterReaderPage({ slug, chapter }: { slug: string; cha
       return next;
     });
   }, []);
+
+  useJsonLd("ld-chapter", novel && chapterData ? buildChapterJsonLd(
+    { title: novel.title, author: novel.author, slug: novel.slug },
+    { number: chapterData.number, title: chapterData.title, publishedAt: chapterData.publishedAt },
+  ) : null);
+  useJsonLd("ld-breadcrumb-chapter", novel && chapterData ? buildBreadcrumbJsonLd([
+    { name: "Home", path: "/" },
+    { name: novel.title, path: `/novel/${novel.slug}` },
+    { name: `Ch. ${chapterData.number}`, path: `/read/${novel.slug}/${chapterData.number}` },
+  ]) : null);
 
   if (loading) {
     return (

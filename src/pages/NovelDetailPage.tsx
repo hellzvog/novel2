@@ -6,6 +6,7 @@ import Cover from "../components/Cover";
 import NovelCard from "../components/NovelCard";
 import Section from "../components/Section";
 import { isFavorite, toggleFavorite, getLastReadChapter } from "../lib/reader-storage";
+import { useJsonLd, buildBookJsonLd, buildBreadcrumbJsonLd } from "../lib/jsonld";
 
 export default function NovelDetailPage({ slug }: { slug: string }) {
   const { navigate } = useRouter();
@@ -45,6 +46,16 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
     })();
     return () => { active = false; };
   }, [slug]);
+
+  useJsonLd("ld-book", novel ? buildBookJsonLd({
+    title: novel.title, author: novel.author, synopsis: novel.synopsis,
+    genres: novel.genres, rating: novel.rating, views: novel.views,
+    slug: novel.slug, chapterCount: novel.chapters.length,
+  }) : null);
+  useJsonLd("ld-breadcrumb-novel", novel ? buildBreadcrumbJsonLd([
+    { name: "Home", path: "/" },
+    { name: novel.title, path: `/novel/${novel.slug}` },
+  ]) : null);
 
   if (loading) {
     return (
