@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { buildUrl } from "./seo";
 
 type JsonLdObject = Record<string, unknown>;
 
@@ -43,7 +44,7 @@ export function buildBreadcrumbJsonLd(
       "@type": "ListItem",
       position: i + 1,
       name: item.name,
-      item: `https://lumen-novel.bolt.new/#${item.path}`,
+      item: buildUrl(item.path),
     })),
   };
 }
@@ -54,10 +55,7 @@ export function buildBookJsonLd(novel: {
   author: string;
   synopsis: string;
   genres: string[];
-  rating: number;
-  views: number;
   slug: string;
-  chapterCount: number;
 }): JsonLdObject {
   return {
     "@context": "https://schema.org",
@@ -69,14 +67,7 @@ export function buildBookJsonLd(novel: {
     },
     description: novel.synopsis,
     genre: novel.genres,
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: novel.rating,
-      bestRating: 5,
-      ratingCount: Math.max(1, Math.round(novel.views / 1000)),
-    },
-    url: `https://lumen-novel.bolt.new/#/novel/${novel.slug}`,
-    numberOfPages: novel.chapterCount,
+    url: buildUrl(`/novel/${novel.slug}`),
   };
 }
 
@@ -102,8 +93,8 @@ export function buildChapterJsonLd(novel: {
     isPartOf: {
       "@type": "Book",
       name: novel.title,
-      url: `https://lumen-novel.bolt.new/#/novel/${novel.slug}`,
+      url: buildUrl(`/novel/${novel.slug}`),
     },
-    url: `https://lumen-novel.bolt.new/#/read/${novel.slug}/${chapter.number}`,
+    url: buildUrl(`/read/${novel.slug}/${chapter.number}`),
   };
 }

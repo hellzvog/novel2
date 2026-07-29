@@ -7,6 +7,7 @@ import NovelCard from "../components/NovelCard";
 import Section from "../components/Section";
 import { isFavorite, toggleFavorite, getLastReadChapter } from "../lib/reader-storage";
 import { useJsonLd, buildBookJsonLd, buildBreadcrumbJsonLd } from "../lib/jsonld";
+import { useSeo } from "../lib/seo";
 
 export default function NovelDetailPage({ slug }: { slug: string }) {
   const { navigate } = useRouter();
@@ -47,10 +48,15 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
     return () => { active = false; };
   }, [slug]);
 
+  useSeo({
+    title: novel ? `${novel.title} by ${novel.author} — LumenNovel` : "Novel — LumenNovel",
+    description: novel ? novel.synopsis.slice(0, 160) : undefined,
+    path: `/novel/${slug}`,
+    type: "book",
+  });
   useJsonLd("ld-book", novel ? buildBookJsonLd({
     title: novel.title, author: novel.author, synopsis: novel.synopsis,
-    genres: novel.genres, rating: novel.rating, views: novel.views,
-    slug: novel.slug, chapterCount: novel.chapters.length,
+    genres: novel.genres, slug: novel.slug,
   }) : null);
   useJsonLd("ld-breadcrumb-novel", novel ? buildBreadcrumbJsonLd([
     { name: "Home", path: "/" },

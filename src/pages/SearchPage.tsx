@@ -3,6 +3,7 @@ import { Search, SlidersHorizontal, X, Loader2, AlertCircle } from "lucide-react
 import { searchNovels, getGenres, type Novel, type NovelStatus } from "../lib/api";
 import { useRouter } from "../lib/router";
 import NovelCard from "../components/NovelCard";
+import { useSeo } from "../lib/seo";
 
 const PAGE_SIZE = 12;
 const STATUSES: (NovelStatus | "All")[] = ["All", "Ongoing", "Completed", "Hiatus"];
@@ -13,6 +14,13 @@ export default function SearchPage({ initialQuery, initialGenre, initialStatus }
   const [genres, setGenres] = useState<string[]>([]);
   const [genre, setGenre] = useState<string>(initialGenre ?? "All");
   const [status, setStatus] = useState<NovelStatus | "All">((initialStatus as NovelStatus) ?? "All");
+
+  const seoPath = initialGenre ? `/genre/${encodeURIComponent(initialGenre)}` : "/search";
+  useSeo({
+    title: initialGenre ? `${initialGenre} Novels — LumenNovel` : initialQuery ? `Search: ${initialQuery} — LumenNovel` : "Browse Novels — LumenNovel",
+    description: initialGenre ? `Browse ${initialGenre} novels on LumenNovel. Read free serialized fiction online.` : "Search and browse novels by title, author, genre, and status on LumenNovel.",
+    path: seoPath,
+  });
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<"popular" | "rating" | "latest">("popular");
   const [showFilters, setShowFilters] = useState(false);

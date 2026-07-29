@@ -6,6 +6,7 @@ import NovelCard from "../components/NovelCard";
 import Section from "../components/Section";
 import Cover from "../components/Cover";
 import { getReadingHistory, type ReadingHistoryEntry } from "../lib/reader-storage";
+import { useSeo } from "../lib/seo";
 
 export default function HomePage() {
   const { navigate } = useRouter();
@@ -13,6 +14,12 @@ export default function HomePage() {
   const [genres, setGenres] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useSeo({
+    title: "LumenNovel — Read Novels Online",
+    description: "Browse and read free serialized novels online. Discover new fiction by genre, status, and popularity. New chapters added regularly.",
+    path: "/",
+  });
   const [history, setHistory] = useState<ReadingHistoryEntry[]>([]);
 
   useEffect(() => {

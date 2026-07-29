@@ -12,6 +12,7 @@ import {
   isFavorite, toggleFavorite,
 } from "../lib/reader-storage";
 import { useJsonLd, buildChapterJsonLd, buildBreadcrumbJsonLd } from "../lib/jsonld";
+import { useSeo } from "../lib/seo";
 
 function renderParagraph(p: string, i: number) {
   if (/<\w+[^>]*>/.test(p)) {
@@ -134,6 +135,14 @@ export default function ChapterReaderPage({ slug, chapter }: { slug: string; cha
       return next;
     });
   }, []);
+
+  useSeo({
+    title: novel && chapterData ? `${chapterData.title} — ${novel.title} | LumenNovel` : "Reading — LumenNovel",
+    description: novel && chapterData ? `Read ${chapterData.title} from ${novel.title} by ${novel.author}.` : undefined,
+    path: `/read/${slug}/${chapter}`,
+    type: "article",
+    publishedTime: chapterData?.publishedAt,
+  });
 
   useJsonLd("ld-chapter", novel && chapterData ? buildChapterJsonLd(
     { title: novel.title, author: novel.author, slug: novel.slug },

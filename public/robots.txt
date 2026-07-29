@@ -1,7 +1,11 @@
 User-agent: *
 Allow: /
-Disallow: /#/admin
-Disallow: /#/admin/
-Disallow: /#/favorites
+Allow: /novel/
+Allow: /read/
+Allow: /genre/
+Allow: /search
+Disallow: /admin
+Disallow: /admin/
+Disallow: /favorites
 
 Sitemap: /sitemap.xml
