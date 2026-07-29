@@ -103,7 +103,7 @@ export default function HomePage() {
             </button>
           </div>
           <div className="hidden items-center justify-center bg-slate-100 p-12 md:flex dark:bg-slate-800">
-            <Cover title={hero.title} hue={hero.coverHue} className="h-80 w-60 shadow-2xl" />
+            <Cover title={hero.title} hue={hero.coverHue} coverUrl={hero.coverUrl} className="h-80 w-60 shadow-2xl" />
           </div>
         </div>
       </div>
@@ -152,7 +152,7 @@ export default function HomePage() {
                 onClick={() => navigate({ name: "novel", slug: n.slug })}
                 className="group flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 text-left transition-all hover:border-amber-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-amber-700"
               >
-                <Cover title={n.title} hue={n.coverHue} className="h-16 w-12 shrink-0" />
+                <Cover title={n.title} hue={n.coverHue} coverUrl={n.coverUrl} className="h-16 w-12 shrink-0" />
                 <div className="min-w-0 flex-1">
                   <h3 className="truncate text-sm font-semibold text-slate-900 group-hover:text-amber-600 dark:text-slate-100 dark:group-hover:text-amber-400">{n.title}</h3>
                   <p className="truncate text-xs text-slate-500 dark:text-slate-400">{n.author}</p>
@@ -174,12 +174,12 @@ export default function HomePage() {
 
       {/* Completed + Ongoing */}
       <div className="grid gap-12 lg:grid-cols-2">
-        <Section title="Completed Novels" onMore={() => navigate({ name: "search", query: "Completed" })}>
+        <Section title="Completed Novels" onMore={() => navigate({ name: "search", status: "Completed" })}>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             {completed.map((n) => <NovelCard key={n.id} novel={n} />)}
           </div>
         </Section>
-        <Section title="Ongoing Novels" onMore={() => navigate({ name: "search", query: "Ongoing" })}>
+        <Section title="Ongoing Novels" onMore={() => navigate({ name: "search", status: "Ongoing" })}>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             {ongoing.map((n) => <NovelCard key={n.id} novel={n} />)}
           </div>
@@ -192,7 +192,7 @@ export default function HomePage() {
           {genres.map((g) => (
             <button
               key={g}
-              onClick={() => navigate({ name: "search", query: g })}
+              onClick={() => navigate({ name: "search", genre: g })}
               className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-all hover:border-amber-400 hover:bg-amber-50 hover:text-amber-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-amber-600 dark:hover:bg-slate-700 dark:hover:text-amber-400"
             >
               <TrendingUp size={14} className="text-amber-500" />

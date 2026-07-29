@@ -90,7 +90,7 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
       <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-800 md:p-8">
         <div className="grid gap-6 md:grid-cols-[200px_1fr]">
           <div className="mx-auto w-48 md:mx-0 md:w-[200px]">
-            <Cover title={novel.title} hue={novel.coverHue} className="aspect-[3/4] w-full shadow-xl" />
+            <Cover title={novel.title} hue={novel.coverHue} coverUrl={novel.coverUrl} className="aspect-[3/4] w-full shadow-xl" />
           </div>
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap items-center gap-2">
@@ -100,7 +100,7 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
                 "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
               }`}>{novel.status}</span>
               {novel.genres.map((g) => (
-                <button key={g} onClick={() => navigate({ name: "search", query: g })} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-amber-100 hover:text-amber-700 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600">{g}</button>
+                <button key={g} onClick={() => navigate({ name: "search", genre: g })} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-amber-100 hover:text-amber-700 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600">{g}</button>
               ))}
             </div>
             <h1 className="font-serif text-3xl font-black text-slate-900 dark:text-white">{novel.title}</h1>

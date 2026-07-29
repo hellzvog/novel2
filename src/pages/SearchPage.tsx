@@ -7,12 +7,12 @@ import NovelCard from "../components/NovelCard";
 const PAGE_SIZE = 12;
 const STATUSES: (NovelStatus | "All")[] = ["All", "Ongoing", "Completed", "Hiatus"];
 
-export default function SearchPage({ initialQuery }: { initialQuery?: string }) {
+export default function SearchPage({ initialQuery, initialGenre, initialStatus }: { initialQuery?: string; initialGenre?: string; initialStatus?: string }) {
   const { navigate } = useRouter();
   const [query, setQuery] = useState(initialQuery ?? "");
   const [genres, setGenres] = useState<string[]>([]);
-  const [genre, setGenre] = useState<string>("All");
-  const [status, setStatus] = useState<NovelStatus | "All">("All");
+  const [genre, setGenre] = useState<string>(initialGenre ?? "All");
+  const [status, setStatus] = useState<NovelStatus | "All">((initialStatus as NovelStatus) ?? "All");
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<"popular" | "rating" | "latest">("popular");
   const [showFilters, setShowFilters] = useState(false);
@@ -27,16 +27,13 @@ export default function SearchPage({ initialQuery }: { initialQuery?: string }) 
 
   useEffect(() => {
     setQuery(initialQuery ?? "");
-    setGenre("All");
-    setStatus("All");
+    setGenre(initialGenre ?? "All");
+    setStatus((initialStatus as NovelStatus) ?? "All");
     setPage(1);
-  }, [initialQuery]);
+  }, [initialQuery, initialGenre, initialStatus]);
 
-  const isGenreQuery = useMemo(() => genres.includes(initialQuery ?? ""), [initialQuery, genres]);
-  const isStatusQuery = useMemo(() => (STATUSES as string[]).includes(initialQuery ?? ""), [initialQuery]);
-
-  const activeGenre = genre !== "All" ? genre : isGenreQuery ? (initialQuery as string) : "All";
-  const activeStatus = status !== "All" ? status : isStatusQuery ? (initialQuery as NovelStatus) : "All";
+  const activeGenre = genre;
+  const activeStatus = status;
 
   useEffect(() => { setPage(1); }, [query, activeGenre, activeStatus, sort]);
 
@@ -71,6 +68,24 @@ export default function SearchPage({ initialQuery }: { initialQuery?: string }) 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     navigate({ name: "search", query: query.trim() || undefined });
+  };
+
+  const selectGenre = (g: string) => {
+    setGenre(g);
+    if (g !== "All") {
+      navigate({ name: "search", genre: g });
+    } else {
+      navigate({ name: "search" });
+    }
+  };
+
+  const selectStatus = (s: NovelStatus | "All") => {
+    setStatus(s);
+    if (s !== "All") {
+      navigate({ name: "search", status: s });
+    } else {
+      navigate({ name: "search" });
+    }
   };
 
   const activeFilterCount = (activeGenre !== "All" ? 1 : 0) + (activeStatus !== "All" ? 1 : 0);
@@ -124,7 +139,7 @@ export default function SearchPage({ initialQuery }: { initialQuery?: string }) 
                 {STATUSES.map((s) => (
                   <button
                     key={s}
-                    onClick={() => setStatus(s)}
+                    onClick={() => selectStatus(s)}
                     className={`rounded-lg px-3 py-1.5 text-left text-sm transition-colors ${
                       activeStatus === s ? "bg-amber-500 font-semibold text-white" : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
                     }`}
@@ -138,7 +153,7 @@ export default function SearchPage({ initialQuery }: { initialQuery?: string }) 
               <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-300">Genre</h3>
               <div className="flex flex-col gap-1">
                 <button
-                  onClick={() => setGenre("All")}
+                  onClick={() => selectGenre("All")}
                   className={`rounded-lg px-3 py-1.5 text-left text-sm transition-colors ${
                     activeGenre === "All" ? "bg-amber-500 font-semibold text-white" : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
                   }`}
@@ -148,7 +163,7 @@ export default function SearchPage({ initialQuery }: { initialQuery?: string }) 
                 {genres.map((g) => (
                   <button
                     key={g}
-                    onClick={() => setGenre(g)}
+                    onClick={() => selectGenre(g)}
                     className={`rounded-lg px-3 py-1.5 text-left text-sm transition-colors ${
                       activeGenre === g ? "bg-amber-500 font-semibold text-white" : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
                     }`}

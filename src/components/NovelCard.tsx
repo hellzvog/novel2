@@ -18,7 +18,7 @@ export default function NovelCard({ novel }: { novel: Novel }) {
       className="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-slate-700 dark:bg-slate-800"
     >
       <div className="relative aspect-[3/4] w-full overflow-hidden">
-        <Cover title={novel.title} hue={novel.coverHue} className="h-full w-full transition-transform duration-300 group-hover:scale-105" />
+        <Cover title={novel.title} hue={novel.coverHue} coverUrl={novel.coverUrl} className="h-full w-full transition-transform duration-300 group-hover:scale-105" />
         <span className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusStyles[novel.status]}`}>
           {novel.status}
         </span>

@@ -3,6 +3,7 @@ import { useMemo } from "react";
 interface CoverProps {
   title: string;
   hue: number;
+  coverUrl?: string | null;
   className?: string;
 }
 
@@ -17,7 +18,7 @@ const palettes = [
   { from: "#3b0764", to: "#a855f7", accent: "#fcd34d" },
 ];
 
-export default function Cover({ title, hue, className = "" }: CoverProps) {
+export default function Cover({ title, hue, coverUrl, className = "" }: CoverProps) {
   const palette = useMemo(() => palettes[((hue % palettes.length) + palettes.length) % palettes.length], [hue]);
   const initials = title
     .split(" ")
@@ -25,6 +26,14 @@ export default function Cover({ title, hue, className = "" }: CoverProps) {
     .map((w) => w[0])
     .join("")
     .toUpperCase();
+
+  if (coverUrl) {
+    return (
+      <div className={`relative overflow-hidden rounded-lg shadow-md ${className}`}>
+        <img src={coverUrl} alt={title} className="h-full w-full object-cover" />
+      </div>
+    );
+  }
 
   return (
     <div

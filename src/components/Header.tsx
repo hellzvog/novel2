@@ -62,7 +62,7 @@ export default function Header() {
               {genres.map((g) => (
                 <button
                   key={g}
-                  onClick={() => navigate({ name: "search", query: g })}
+                  onClick={() => navigate({ name: "search", genre: g })}
                   className="rounded-lg px-2 py-1.5 text-left text-xs text-slate-600 transition-colors hover:bg-amber-50 hover:text-amber-600 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-amber-400"
                 >
                   {g}
@@ -131,7 +131,7 @@ export default function Header() {
             {genres.map((g) => (
               <button
                 key={g}
-                onClick={() => { navigate({ name: "search", query: g }); setMobileOpen(false); }}
+                onClick={() => { navigate({ name: "search", genre: g }); setMobileOpen(false); }}
                 className="rounded-lg px-2 py-1.5 text-left text-xs text-slate-600 hover:bg-amber-50 dark:text-slate-300 dark:hover:bg-slate-800"
               >
                 {g}

@@ -77,7 +77,7 @@ function Pages() {
         {route.name === "home" && <HomePage />}
         {route.name === "novel" && <NovelDetailPage slug={route.slug} />}
         {route.name === "reader" && <ChapterReaderPage slug={route.slug} chapter={route.chapter} />}
-        {route.name === "search" && <SearchPage initialQuery={route.query} />}
+        {route.name === "search" && <SearchPage initialQuery={route.query} initialGenre={route.genre} initialStatus={route.status} />}
         {route.name === "favorites" && <FavoritesPage />}
       </main>
       {!isReader && <Footer />}

@@ -4,7 +4,7 @@ export type Route =
   | { name: "home" }
   | { name: "novel"; slug: string }
   | { name: "reader"; slug: string; chapter: number }
-  | { name: "search"; query?: string }
+  | { name: "search"; query?: string; genre?: string; status?: string }
   | { name: "favorites" }
   | { name: "admin" }
   | { name: "admin-login" }
@@ -30,8 +30,14 @@ function parseHash(): Route {
     return { name: "reader", slug: parts[1], chapter: Number(parts[2]) };
   }
   if (parts[0] === "search") {
-    const q = parts.slice(1).join("/");
-    return { name: "search", query: decodeURIComponent(q) };
+    const rest = parts.slice(1).join("/");
+    if (rest.startsWith("genre:")) {
+      return { name: "search", genre: decodeURIComponent(rest.slice(6)) };
+    }
+    if (rest.startsWith("status:")) {
+      return { name: "search", status: decodeURIComponent(rest.slice(7)) };
+    }
+    return { name: "search", query: decodeURIComponent(rest) };
   }
   if (parts[0] === "favorites") return { name: "favorites" };
   if (parts[0] === "admin") {
@@ -62,6 +68,8 @@ function toHash(route: Route): string {
     case "reader":
       return `#/read/${route.slug}/${route.chapter}`;
     case "search":
+      if (route.genre) return `#/search/genre:${encodeURIComponent(route.genre)}`;
+      if (route.status) return `#/search/status:${encodeURIComponent(route.status)}`;
       return route.query ? `#/search/${encodeURIComponent(route.query)}` : "#/search";
     case "favorites":
       return "#/favorites";
