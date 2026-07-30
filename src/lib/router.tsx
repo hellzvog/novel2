@@ -139,16 +139,14 @@ function toPath(route: Route): string {
       return `/novel/${route.slug}`;
     case "reader":
       return `/read/${route.slug}/${route.chapter}`;
-    case "search":
-      if (route.genre) {
-        const params = new URLSearchParams({ genre: route.genre });
-        return `/search?${params.toString()}`;
-      }
-      if (route.status) {
-        const params = new URLSearchParams({ status: route.status });
-        return `/search?${params.toString()}`;
-      }
-      return route.query ? `/search?query=${encodeURIComponent(route.query)}` : "/search";
+    case "search": {
+      const params = new URLSearchParams();
+      if (route.query) params.set("query", route.query);
+      if (route.genre) params.set("genre", route.genre);
+      if (route.status) params.set("status", route.status);
+      const qs = params.toString();
+      return qs ? `/search?${qs}` : "/search";
+    }
     case "favorites":
       return "/favorites";
     case "admin":

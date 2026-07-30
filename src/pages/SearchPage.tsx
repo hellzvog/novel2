@@ -75,25 +75,27 @@ export default function SearchPage({ initialQuery, initialGenre, initialStatus }
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate({ name: "search", query: query.trim() || undefined });
+    navigate({ name: "search", query: query.trim() || undefined, genre: activeGenre !== "All" ? activeGenre : undefined, status: activeStatus !== "All" ? activeStatus : undefined });
   };
 
   const selectGenre = (g: string) => {
     setGenre(g);
-    if (g !== "All") {
-      navigate({ name: "search", genre: g });
-    } else {
-      navigate({ name: "search" });
-    }
+    navigate({
+      name: "search",
+      query: query.trim() || undefined,
+      genre: g !== "All" ? g : undefined,
+      status: activeStatus !== "All" ? activeStatus : undefined,
+    });
   };
 
   const selectStatus = (s: NovelStatus | "All") => {
     setStatus(s);
-    if (s !== "All") {
-      navigate({ name: "search", status: s });
-    } else {
-      navigate({ name: "search" });
-    }
+    navigate({
+      name: "search",
+      query: query.trim() || undefined,
+      genre: activeGenre !== "All" ? activeGenre : undefined,
+      status: s !== "All" ? s : undefined,
+    });
   };
 
   const activeFilterCount = (activeGenre !== "All" ? 1 : 0) + (activeStatus !== "All" ? 1 : 0);
