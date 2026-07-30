@@ -2,7 +2,6 @@ User-agent: *
 Allow: /
 Allow: /novel/
 Allow: /read/
-Allow: /genre/
 Allow: /search
 Disallow: /admin
 Disallow: /admin/

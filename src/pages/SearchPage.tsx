@@ -15,7 +15,7 @@ export default function SearchPage({ initialQuery, initialGenre, initialStatus }
   const [genre, setGenre] = useState<string>(initialGenre ?? "All");
   const [status, setStatus] = useState<NovelStatus | "All">((initialStatus as NovelStatus) ?? "All");
 
-  const seoPath = initialGenre ? `/genre/${encodeURIComponent(initialGenre)}` : "/search";
+  const seoPath = initialGenre ? `/search?genre=${encodeURIComponent(initialGenre)}` : "/search";
   useSeo({
     title: initialGenre ? `${initialGenre} Novels — LumenNovel` : initialQuery ? `Search: ${initialQuery} — LumenNovel` : "Browse Novels — LumenNovel",
     description: initialGenre ? `Browse ${initialGenre} novels on LumenNovel. Read free serialized fiction online.` : "Search and browse novels by title, author, genre, and status on LumenNovel.",

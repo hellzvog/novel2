@@ -101,9 +101,6 @@ function parsePath(pathname: string, search: string): Route {
   if (parts[0] === "read" && parts[1] && parts[2]) {
     return { name: "reader", slug: parts[1], chapter: Number(parts[2]) };
   }
-  if (parts[0] === "genre" && parts[1]) {
-    return { name: "search", genre: decodeURIComponent(parts[1]) };
-  }
   if (parts[0] === "search") {
     const params = new URLSearchParams(search);
     const query = params.get("query") || undefined;
@@ -143,7 +140,10 @@ function toPath(route: Route): string {
     case "reader":
       return `/read/${route.slug}/${route.chapter}`;
     case "search":
-      if (route.genre) return `/genre/${encodeURIComponent(route.genre)}`;
+      if (route.genre) {
+        const params = new URLSearchParams({ genre: route.genre });
+        return `/search?${params.toString()}`;
+      }
       if (route.status) {
         const params = new URLSearchParams({ status: route.status });
         return `/search?${params.toString()}`;
