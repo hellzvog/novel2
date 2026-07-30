@@ -10,6 +10,11 @@ import NovelDetailPage from "./pages/NovelDetailPage";
 import ChapterReaderPage from "./pages/ChapterReaderPage";
 import SearchPage from "./pages/SearchPage";
 import FavoritesPage from "./pages/FavoritesPage";
+import AboutPage from "./pages/AboutPage";
+import ContactPage from "./pages/ContactPage";
+import PrivacyPage from "./pages/PrivacyPage";
+import TermsPage from "./pages/TermsPage";
+import DmcaPage from "./pages/DmcaPage";
 import AdminLoginPage from "./pages/admin/AdminLoginPage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminNovelsPage from "./pages/admin/AdminNovelsPage";
@@ -79,6 +84,11 @@ function Pages() {
         {route.name === "reader" && <ChapterReaderPage slug={route.slug} chapter={route.chapter} />}
         {route.name === "search" && <SearchPage initialQuery={route.query} initialGenre={route.genre} initialStatus={route.status} />}
         {route.name === "favorites" && <FavoritesPage />}
+        {route.name === "about" && <AboutPage />}
+        {route.name === "contact" && <ContactPage />}
+        {route.name === "privacy" && <PrivacyPage />}
+        {route.name === "terms" && <TermsPage />}
+        {route.name === "dmca" && <DmcaPage />}
       </main>
       {!isReader && <Footer />}
     </div>

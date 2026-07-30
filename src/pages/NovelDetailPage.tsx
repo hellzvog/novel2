@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BookOpen, Eye, Play, Star, ChevronDown, ChevronUp, Loader2, AlertCircle, Heart, History } from "lucide-react";
+import { BookOpen, Eye, Play, Star, ChevronDown, ChevronUp, Loader2, AlertCircle, Heart, History, Clock } from "lucide-react";
 import { getNovel, relatedNovels, formatViews, type Novel } from "../lib/api";
 import { useRouter } from "../lib/router";
 import Cover from "../components/Cover";
@@ -83,6 +83,9 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
 
   const chapters = showAllChapters ? novel.chapters : novel.chapters.slice(0, 12);
   const firstChapter = novel.chapters[0];
+  const lastUpdated = novel.chapters.length > 0
+    ? novel.chapters.reduce((latest, c) => c.publishedAt > latest ? c.publishedAt : latest, novel.chapters[0].publishedAt)
+    : null;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6">
@@ -127,6 +130,13 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
                 <span className="font-bold text-slate-900 dark:text-white">{novel.chapters.length}</span>
                 <span className="text-slate-400">chapters</span>
               </span>
+              {lastUpdated && (
+                <span className="flex items-center gap-1.5">
+                  <Clock size={16} className="text-slate-400" />
+                  <span className="text-slate-400">Updated</span>
+                  <span className="font-bold text-slate-900 dark:text-white">{lastUpdated}</span>
+                </span>
+              )}
             </div>
             <div className="flex flex-wrap gap-3 pt-2">
               {lastChapter !== null && (

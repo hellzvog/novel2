@@ -66,6 +66,19 @@ async function buildSitemap(): Promise<string> {
     `  <url>\n    <loc>${origin}/search</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>`
   );
 
+  // Static trust/compliance pages
+  for (const p of [
+    { path: "/about", freq: "monthly", priority: "0.5" },
+    { path: "/contact", freq: "monthly", priority: "0.5" },
+    { path: "/privacy", freq: "yearly", priority: "0.4" },
+    { path: "/terms", freq: "yearly", priority: "0.4" },
+    { path: "/dmca", freq: "yearly", priority: "0.4" },
+  ]) {
+    urls.push(
+      `  <url>\n    <loc>${origin}${p.path}</loc>\n    <changefreq>${p.freq}</changefreq>\n    <priority>${p.priority}</priority>\n  </url>`
+    );
+  }
+
   // Genres
   try {
     const genres = await supabaseFetch<GenreRow[]>(`/rest/v1/genres?select=slug`);

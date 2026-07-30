@@ -3,6 +3,11 @@ Allow: /
 Allow: /novel/
 Allow: /read/
 Allow: /search
+Allow: /about
+Allow: /contact
+Allow: /privacy
+Allow: /terms
+Allow: /dmca
 Disallow: /admin
 Disallow: /admin/
 Disallow: /favorites

@@ -58,12 +58,13 @@ export default function Footer() {
             )}
           </div>
           <div>
-            <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-300">About</h4>
+            <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-300">Company</h4>
             <ul className="space-y-2 text-sm text-slate-500 dark:text-slate-400">
-              <li><a href="#/" className="hover:text-amber-600 dark:hover:text-amber-400">About Us</a></li>
-              <li><a href="#/" className="hover:text-amber-600 dark:hover:text-amber-400">Contact</a></li>
-              <li><a href="#/" className="hover:text-amber-600 dark:hover:text-amber-400">Privacy</a></li>
-              <li><a href="#/" className="hover:text-amber-600 dark:hover:text-amber-400">Terms</a></li>
+              <li><button onClick={() => navigate({ name: "about" })} className="hover:text-amber-600 dark:hover:text-amber-400">About Us</button></li>
+              <li><button onClick={() => navigate({ name: "contact" })} className="hover:text-amber-600 dark:hover:text-amber-400">Contact</button></li>
+              <li><button onClick={() => navigate({ name: "privacy" })} className="hover:text-amber-600 dark:hover:text-amber-400">Privacy Policy</button></li>
+              <li><button onClick={() => navigate({ name: "terms" })} className="hover:text-amber-600 dark:hover:text-amber-400">Terms of Service</button></li>
+              <li><button onClick={() => navigate({ name: "dmca" })} className="hover:text-amber-600 dark:hover:text-amber-400">DMCA / Copyright</button></li>
             </ul>
           </div>
         </div>

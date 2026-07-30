@@ -6,6 +6,11 @@ export type Route =
   | { name: "reader"; slug: string; chapter: number }
   | { name: "search"; query?: string; genre?: string; status?: string }
   | { name: "favorites" }
+  | { name: "about" }
+  | { name: "contact" }
+  | { name: "privacy" }
+  | { name: "terms" }
+  | { name: "dmca" }
   | { name: "admin" }
   | { name: "admin-login" }
   | { name: "admin-novels" }
@@ -68,6 +73,11 @@ function parseHash(hash: string): Route | null {
     return { name: "search", query: decodeURIComponent(rest) };
   }
   if (parts[0] === "favorites") return { name: "favorites" };
+  if (parts[0] === "about") return { name: "about" };
+  if (parts[0] === "contact") return { name: "contact" };
+  if (parts[0] === "privacy") return { name: "privacy" };
+  if (parts[0] === "terms") return { name: "terms" };
+  if (parts[0] === "dmca") return { name: "dmca" };
   if (parts[0] === "admin") {
     if (!parts[1] || parts[1] === "dashboard") return { name: "admin" };
     if (parts[1] === "login") return { name: "admin-login" };
@@ -112,6 +122,11 @@ function parsePath(pathname: string, search: string): Route {
     return { name: "search" };
   }
   if (parts[0] === "favorites") return { name: "favorites" };
+  if (parts[0] === "about") return { name: "about" };
+  if (parts[0] === "contact") return { name: "contact" };
+  if (parts[0] === "privacy") return { name: "privacy" };
+  if (parts[0] === "terms") return { name: "terms" };
+  if (parts[0] === "dmca") return { name: "dmca" };
   if (parts[0] === "admin") {
     if (!parts[1] || parts[1] === "dashboard") return { name: "admin" };
     if (parts[1] === "login") return { name: "admin-login" };
@@ -149,6 +164,16 @@ function toPath(route: Route): string {
     }
     case "favorites":
       return "/favorites";
+    case "about":
+      return "/about";
+    case "contact":
+      return "/contact";
+    case "privacy":
+      return "/privacy";
+    case "terms":
+      return "/terms";
+    case "dmca":
+      return "/dmca";
     case "admin":
       return "/admin";
     case "admin-login":
