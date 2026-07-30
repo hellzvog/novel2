@@ -4,6 +4,7 @@ import { searchNovels, getGenres, type Novel, type NovelStatus } from "../lib/ap
 import { useRouter } from "../lib/router";
 import NovelCard from "../components/NovelCard";
 import { useSeo } from "../lib/seo";
+import AdBanner from "../components/AdBanner";
 
 const PAGE_SIZE = 12;
 const STATUSES: (NovelStatus | "All")[] = ["All", "Ongoing", "Completed", "Hiatus"];
@@ -103,6 +104,8 @@ export default function SearchPage({ initialQuery, initialGenre, initialStatus }
   return (
     <div className="mx-auto max-w-7xl px-4 py-6">
       <h1 className="mb-6 font-serif text-2xl font-bold text-slate-900 dark:text-white">Browse Novels</h1>
+
+      <AdBanner placement="browse" className="mb-6" />
 
       {/* Search + sort bar */}
       <div className="mb-6 flex flex-col gap-3 sm:flex-row">
@@ -211,9 +214,12 @@ export default function SearchPage({ initialQuery, initialGenre, initialStatus }
               No novels match your filters.
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
-              {results.map((n) => <NovelCard key={n.id} novel={n} />)}
-            </div>
+            <>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
+                {results.map((n) => <NovelCard key={n.id} novel={n} />)}
+              </div>
+              <AdBanner placement="search" className="mt-6" />
+            </>
           )}
 
           {/* Pagination */}

@@ -2,6 +2,7 @@ import { useEffect, lazy, Suspense } from "react";
 import { RouterProvider, useRouter } from "./lib/router";
 import { ThemeProvider } from "./lib/theme";
 import { AdminAuthProvider, useAdminAuth } from "./lib/admin-auth";
+import { AdSenseProvider, useAdSense } from "./lib/adsense";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -29,9 +30,15 @@ const ADMIN_ROUTES = new Set(["admin", "admin-novels", "admin-novel-edit", "admi
 function Pages() {
   const { route, navigate } = useRouter();
   const { user, loading, isAdmin } = useAdminAuth();
+  const { recordNavigation } = useAdSense();
   const isReader = route.name === "reader";
   const isAdminLogin = route.name === "admin-login";
   const isAdminRoute = ADMIN_ROUTES.has(route.name);
+
+  // Record navigations for session-level abuse detection.
+  useEffect(() => {
+    recordNavigation();
+  }, [route, recordNavigation]);
 
   // Redirect to login if accessing admin routes without auth
   useEffect(() => {
@@ -99,11 +106,13 @@ export default function App() {
   return (
     <ThemeProvider>
       <ErrorBoundary>
-        <RouterProvider>
-          <AdminAuthProvider>
-            <Pages />
-          </AdminAuthProvider>
-        </RouterProvider>
+        <AdSenseProvider>
+          <RouterProvider>
+            <AdminAuthProvider>
+              <Pages />
+            </AdminAuthProvider>
+          </RouterProvider>
+        </AdSenseProvider>
       </ErrorBoundary>
     </ThemeProvider>
   );

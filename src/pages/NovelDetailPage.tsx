@@ -8,6 +8,7 @@ import Section from "../components/Section";
 import { isFavorite, toggleFavorite, getLastReadChapter } from "../lib/reader-storage";
 import { useJsonLd, buildBookJsonLd, buildBreadcrumbJsonLd } from "../lib/jsonld";
 import { useSeo } from "../lib/seo";
+import AdBanner from "../components/AdBanner";
 
 export default function NovelDetailPage({ slug }: { slug: string }) {
   const { navigate } = useRouter();
@@ -182,6 +183,8 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
         <p className="leading-relaxed text-slate-600 dark:text-slate-300">{novel.synopsis}</p>
       </div>
 
+      <AdBanner placement="novel" className="mt-6" />
+
       {/* Chapter list */}
       <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-800">
         <div className="mb-4 flex items-center justify-between">
@@ -214,6 +217,8 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
           </button>
         )}
       </div>
+
+      <AdBanner placement="novel" className="mt-6" />
 
       {/* Related */}
       {related.length > 0 && (

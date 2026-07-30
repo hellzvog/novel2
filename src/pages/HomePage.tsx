@@ -7,6 +7,7 @@ import Section from "../components/Section";
 import Cover from "../components/Cover";
 import { getReadingHistory, type ReadingHistoryEntry } from "../lib/reader-storage";
 import { useSeo } from "../lib/seo";
+import AdBanner from "../components/AdBanner";
 
 export default function HomePage() {
   const { navigate } = useRouter();
@@ -148,6 +149,8 @@ export default function HomePage() {
         </div>
       </Section>
 
+      <AdBanner placement="home" className="my-8" />
+
       {/* Latest updates */}
       <Section title="Latest Updates" onMore={() => navigate({ name: "search" })}>
         <div className="grid gap-2 sm:grid-cols-2">
@@ -178,6 +181,8 @@ export default function HomePage() {
           {popular.map((n) => <NovelCard key={n.id} novel={n} />)}
         </div>
       </Section>
+
+      <AdBanner placement="home" className="my-8" />
 
       {/* Completed + Ongoing */}
       <div className="grid gap-12 lg:grid-cols-2">
