@@ -105,8 +105,6 @@ export default function SearchPage({ initialQuery, initialGenre, initialStatus }
     <div className="mx-auto max-w-7xl px-4 py-6">
       <h1 className="mb-6 font-serif text-2xl font-bold text-slate-900 dark:text-white">Browse Novels</h1>
 
-      <AdBanner placement="browse" className="mb-6" />
-
       {/* Search + sort bar */}
       <div className="mb-6 flex flex-col gap-3 sm:flex-row">
         <form onSubmit={submit} className="relative flex-1">
@@ -141,6 +139,8 @@ export default function SearchPage({ initialQuery, initialGenre, initialStatus }
           </button>
         </div>
       </div>
+
+      <AdBanner placement="browse" className="mb-6" />
 
       <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
         {/* Filters sidebar */}
