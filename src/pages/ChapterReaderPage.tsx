@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Loader2, AlertCircle, Settings, X } from "lucide-react";
 import { getChapter, incrementViews, type Novel, type Chapter } from "../lib/api";
 import { useRouter } from "../lib/router";
@@ -11,6 +11,7 @@ import {
   saveReadingProgress,
   saveReadingHistory,
 } from "../lib/reader-storage";
+import { computeAdInsertions } from "../lib/reader-ads";
 
 const WIDTH_CLASSES: Record<string, string> = {
   narrow: "max-w-2xl",
@@ -100,6 +101,15 @@ export default function ChapterReaderPage({ slug, chapter }: { slug: string; cha
       window.scrollTo(0, 0);
     }
   }, [novel, currentChapter, loading]);
+
+  // Compute ad insertion positions once per chapter content change.
+  // The `adsEnabled` flag is the single gate for future premium/subscriber
+  // disabling — set it to false and no ads render without touching the algorithm.
+  const adsEnabled = true;
+  const adPlan = useMemo(
+    () => (adsEnabled && currentChapter ? computeAdInsertions(currentChapter.content) : null),
+    [adsEnabled, currentChapter],
+  );
 
   if (loading) {
     return (
@@ -220,12 +230,15 @@ export default function ChapterReaderPage({ slug, chapter }: { slug: string; cha
         >
           <div className="space-y-4 text-slate-700 dark:text-slate-200">
             {currentChapter.content.map((paragraph, i) => (
-              <p key={i}>{paragraph}</p>
+              <div key={i}>
+                <p>{paragraph}</p>
+                {adPlan && adPlan.insertAfter.includes(i) && (
+                  <AdBanner placement="reader" format="in-article" className="my-8" />
+                )}
+              </div>
             ))}
           </div>
         </div>
-
-        <AdBanner placement="reader" format="in-article" className="my-8" />
 
         {/* Chapter nav */}
         <div className="mt-10 flex items-center justify-between gap-4 border-t border-slate-200 pt-6 dark:border-slate-700">
