@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { memo, type ReactNode } from "react";
 import { ChevronRight } from "lucide-react";
 
 interface SectionProps {
@@ -7,7 +7,7 @@ interface SectionProps {
   onMore?: () => void;
 }
 
-export default function Section({ title, children, onMore }: SectionProps) {
+function SectionImpl({ title, children, onMore }: SectionProps) {
   return (
     <section className="mb-12">
       <div className="mb-4 flex items-center justify-between">
@@ -28,3 +28,6 @@ export default function Section({ title, children, onMore }: SectionProps) {
     </section>
   );
 }
+
+export const Section = memo(SectionImpl);
+export default Section;

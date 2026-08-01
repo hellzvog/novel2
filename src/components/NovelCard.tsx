@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Star, Eye, BookOpen } from "lucide-react";
 import type { Novel } from "../lib/api";
 import { formatViews, latestUpdateLabel } from "../lib/api";
@@ -10,7 +11,7 @@ const statusStyles: Record<string, string> = {
   Hiatus: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
 };
 
-export default function NovelCard({ novel }: { novel: Novel }) {
+function NovelCardImpl({ novel }: { novel: Novel }) {
   const { navigate } = useRouter();
   return (
     <button
@@ -28,7 +29,7 @@ export default function NovelCard({ novel }: { novel: Novel }) {
           {novel.title}
         </h3>
         <p className="text-xs text-slate-500 dark:text-slate-400">by {novel.author}</p>
-        <div className="mt-auto flex items-center justify-between pt-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+        <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-1.5 text-[11px] text-slate-500 dark:text-slate-400">
           <span className="flex items-center gap-1">
             <Star size={12} className="fill-amber-400 text-amber-400" />
             {novel.rating.toFixed(1)}
@@ -46,3 +47,6 @@ export default function NovelCard({ novel }: { novel: Novel }) {
     </button>
   );
 }
+
+export const NovelCard = memo(NovelCardImpl);
+export default NovelCard;

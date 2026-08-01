@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Loader2, AlertCircle, Settings, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, FileX2, Settings, X } from "lucide-react";
 import { getChapter, incrementViews, type Novel, type Chapter } from "../lib/api";
 import { useRouter } from "../lib/router";
 import { useJsonLd, buildChapterJsonLd, buildBreadcrumbJsonLd } from "../lib/jsonld";
@@ -12,6 +12,7 @@ import {
   saveReadingHistory,
 } from "../lib/reader-storage";
 import { computeAdInsertions } from "../lib/reader-ads";
+import NotFound from "../components/NotFound";
 
 const WIDTH_CLASSES: Record<string, string> = {
   narrow: "max-w-2xl",
@@ -54,7 +55,7 @@ export default function ChapterReaderPage({ slug, chapter }: { slug: string; cha
           incrementViews(slug);
         }
       } catch (e) {
-        if (active) setError(e instanceof Error ? e.message : "Failed to load chapter");
+        if (active) setError(e instanceof Error ? e.message : "Something went wrong while loading this chapter. Please try again.");
       } finally {
         if (active) setLoading(false);
       }
@@ -121,13 +122,13 @@ export default function ChapterReaderPage({ slug, chapter }: { slug: string; cha
 
   if (error || !novel || !currentChapter) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-20 text-center">
-        <AlertCircle className="mx-auto mb-4 text-rose-500" size={32} />
-        <p className="text-slate-600 dark:text-slate-300">{error ?? "Chapter not found"}</p>
-        <button onClick={() => navigate({ name: "novel", slug })} className="mt-4 text-amber-600 hover:underline">
-          Back to novel
-        </button>
-      </div>
+      <NotFound
+        icon={FileX2}
+        title="Chapter Not Found"
+        message={error ?? "This chapter doesn't exist or may have been removed."}
+        backLabel="Back to Novel"
+        backRoute={{ name: "novel", slug }}
+      />
     );
   }
 

@@ -35,7 +35,7 @@ export default function HomePage() {
         setHistory(getReadingHistory());
         setError(null);
       } catch (e) {
-        if (active) setError(e instanceof Error ? e.message : "Failed to load novels");
+        if (active) setError(e instanceof Error ? e.message : "Something went wrong while loading novels. Please try again.");
       } finally {
         if (active) setLoading(false);
       }

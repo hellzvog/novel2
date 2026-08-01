@@ -38,7 +38,7 @@ export default function Header() {
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-md">
             <BookOpen size={20} />
           </span>
-          <span className="font-serif text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <span className="hidden font-serif text-xl font-bold tracking-tight text-slate-900 dark:text-white sm:inline">
             Lumen<span className="text-amber-500">Novel</span>
           </span>
         </button>
@@ -58,7 +58,7 @@ export default function Header() {
             <button className="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-amber-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-amber-400">
               Genres
             </button>
-            <div className="invisible absolute left-0 top-full z-50 grid w-[28rem] grid-cols-3 gap-1 rounded-xl border border-slate-200 bg-white p-3 opacity-0 shadow-xl transition-all group-hover:visible group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-800">
+            <div className="invisible absolute left-0 top-full z-50 grid w-[20rem] max-w-[calc(100vw-2rem)] grid-cols-3 gap-1 rounded-xl border border-slate-200 bg-white p-3 opacity-0 shadow-xl transition-all group-hover:visible group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-800">
               {genres.map((g) => (
                 <button
                   key={g}

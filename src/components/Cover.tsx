@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 interface CoverProps {
   title: string;
@@ -20,6 +20,7 @@ const palettes = [
 
 export default function Cover({ title, hue, coverUrl, className = "" }: CoverProps) {
   const palette = useMemo(() => palettes[((hue % palettes.length) + palettes.length) % palettes.length], [hue]);
+  const [imgError, setImgError] = useState(false);
   const initials = title
     .split(" ")
     .slice(0, 3)
@@ -27,10 +28,19 @@ export default function Cover({ title, hue, coverUrl, className = "" }: CoverPro
     .join("")
     .toUpperCase();
 
-  if (coverUrl) {
+  const showImage = coverUrl && !imgError;
+
+  if (showImage) {
     return (
       <div className={`relative overflow-hidden rounded-lg shadow-md ${className}`}>
-        <img src={coverUrl} alt={title} className="h-full w-full object-cover" />
+        <img
+          src={coverUrl}
+          alt={title}
+          loading="lazy"
+          decoding="async"
+          onError={() => setImgError(true)}
+          className="h-full w-full object-cover"
+        />
       </div>
     );
   }

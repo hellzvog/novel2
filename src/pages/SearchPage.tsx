@@ -64,7 +64,7 @@ export default function SearchPage({ initialQuery, initialGenre, initialStatus }
         setTotal(t);
         setError(null);
       } catch (e) {
-        if (active) setError(e instanceof Error ? e.message : "Failed to search");
+        if (active) setError(e instanceof Error ? e.message : "Something went wrong while searching. Please try again.");
       } finally {
         if (active) setLoading(false);
       }

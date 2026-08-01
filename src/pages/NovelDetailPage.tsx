@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { BookOpen, Eye, Play, Star, ChevronDown, ChevronUp, Loader2, AlertCircle, Heart, History, Clock } from "lucide-react";
+import { BookOpen, Eye, Play, Star, ChevronDown, ChevronUp, Loader2, BookX, Heart, History, Clock } from "lucide-react";
 import { getNovel, relatedNovels, formatViews, type Novel } from "../lib/api";
 import { useRouter } from "../lib/router";
 import Cover from "../components/Cover";
 import NovelCard from "../components/NovelCard";
 import Section from "../components/Section";
+import NotFound from "../components/NotFound";
 import { isFavorite, toggleFavorite, getLastReadChapter } from "../lib/reader-storage";
 import { useJsonLd, buildBookJsonLd, buildBreadcrumbJsonLd } from "../lib/jsonld";
 import { useSeo } from "../lib/seo";
@@ -74,11 +75,13 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
 
   if (error || !novel) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-20 text-center">
-        <AlertCircle className="mx-auto mb-4 text-rose-500" size={32} />
-        <p className="text-slate-600 dark:text-slate-300">{error ?? "Novel not found"}</p>
-        <button onClick={() => navigate({ name: "home" })} className="mt-4 text-amber-600 hover:underline">Back home</button>
-      </div>
+      <NotFound
+        icon={BookX}
+        title="Novel Not Found"
+        message={error ?? "The novel you're looking for doesn't exist or may have been removed."}
+        backLabel="Browse Novels"
+        backRoute={{ name: "search" }}
+      />
     );
   }
 
@@ -113,9 +116,9 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
                 <button key={g} onClick={() => navigate({ name: "search", genre: g })} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-amber-100 hover:text-amber-700 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600">{g}</button>
               ))}
             </div>
-            <h1 className="font-serif text-3xl font-black text-slate-900 dark:text-white">{novel.title}</h1>
+            <h1 className="font-serif text-2xl font-black leading-tight text-slate-900 dark:text-white md:text-3xl">{novel.title}</h1>
             <p className="text-sm text-slate-500 dark:text-slate-400">by <span className="font-medium text-slate-700 dark:text-slate-300">{novel.author}</span></p>
-            <div className="flex flex-wrap gap-5 text-sm">
+            <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
               <span className="flex items-center gap-1.5">
                 <Star size={16} className="fill-amber-400 text-amber-400" />
                 <span className="font-bold text-slate-900 dark:text-white">{novel.rating.toFixed(1)}</span>
@@ -139,7 +142,7 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
                 </span>
               )}
             </div>
-            <div className="flex flex-wrap gap-3 pt-2">
+            <div className="flex flex-wrap gap-2 pt-2">
               {lastChapter !== null && (
                 <button
                   onClick={() => navigate({ name: "reader", slug: novel.slug, chapter: lastChapter })}
