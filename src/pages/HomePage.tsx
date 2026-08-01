@@ -153,7 +153,7 @@ export default function HomePage() {
 
       {/* Latest updates */}
       <Section title="Latest Updates" onMore={() => navigate({ name: "search" })}>
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {latest.map((n) => {
             const last = n.chapters[n.chapters.length - 1];
             return (
