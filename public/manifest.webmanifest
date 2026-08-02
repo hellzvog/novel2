@@ -1,0 +1,17 @@
+{
+  "name": "LumenNovel — Read Novels Online",
+  "short_name": "LumenNovel",
+  "description": "Read free serialized novels online at LumenNovel. Browse by genre, status, and popularity.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#f59e0b",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

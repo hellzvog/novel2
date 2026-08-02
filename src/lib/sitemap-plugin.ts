@@ -1,8 +1,14 @@
 import type { Plugin, ViteDevServer } from "vite";
+import { writeFileSync, mkdirSync } from "node:fs";
+import { resolve, dirname } from "node:path";
 
 /**
  * Vite plugin that serves a dynamic /sitemap.xml built from live Supabase data.
- * In dev it runs as a middleware; in preview/build it also serves the route.
+ *
+ * - In dev/preview it runs as middleware so the sitemap is always fresh.
+ * - At build time it also writes sitemap.xml and robots.txt into the output
+ *   directory so static hosts (Cloudflare Pages, etc.) can serve them as
+ *   real files without falling through to the SPA catch-all.
  */
 
 interface PreviewServer {
@@ -90,38 +96,62 @@ async function buildSitemap(): Promise<string> {
   } catch { /* skip on error */ }
 
   // Novels + chapters
-  const novels = await supabaseFetch<NovelRow[]>(`/rest/v1/novels?select=id,slug,updated_at&order=created_at.asc`);
-  const novelIds = novels.map((n) => n.id);
-  const allChapters: ChapterRow[] = [];
-  if (novelIds.length > 0) {
-    for (let i = 0; i < novelIds.length; i += 50) {
-      const batch = novelIds.slice(i, i + 50);
-      const filter = `novel_id=in.(${batch.join(",")})`;
-      try {
-        const ch = await supabaseFetch<ChapterRow[]>(
-          `/rest/v1/chapters?select=novel_id,number,title,published_at&${filter}&order=number.asc`
-        );
-        allChapters.push(...ch);
-      } catch { /* skip on error */ }
+  try {
+    const novels = await supabaseFetch<NovelRow[]>(`/rest/v1/novels?select=id,slug,updated_at&order=created_at.asc`);
+    const novelIds = novels.map((n) => n.id);
+    const allChapters: ChapterRow[] = [];
+    if (novelIds.length > 0) {
+      for (let i = 0; i < novelIds.length; i += 50) {
+        const batch = novelIds.slice(i, i + 50);
+        const filter = `novel_id=in.(${batch.join(",")})`;
+        try {
+          const ch = await supabaseFetch<ChapterRow[]>(
+            `/rest/v1/chapters?select=novel_id,number,title,published_at&${filter}&order=number.asc`
+          );
+          allChapters.push(...ch);
+        } catch { /* skip on error */ }
+      }
     }
-  }
 
-  for (const n of novels) {
-    const lastmod = (n.updated_at ?? today()).split("T")[0];
-    urls.push(
-      `  <url>\n    <loc>${origin}/novel/${escapeXml(n.slug)}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`
-    );
-
-    const chapters = allChapters.filter((c) => c.novel_id === n.id);
-    for (const c of chapters) {
-      const cdate = (c.published_at ?? lastmod).split("T")[0];
+    for (const n of novels) {
+      const lastmod = (n.updated_at ?? today()).split("T")[0];
       urls.push(
-        `  <url>\n    <loc>${origin}/read/${escapeXml(n.slug)}/${c.number}</loc>\n    <lastmod>${cdate}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.5</priority>\n  </url>`
+        `  <url>\n    <loc>${origin}/novel/${escapeXml(n.slug)}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`
       );
+
+      const chapters = allChapters.filter((c) => c.novel_id === n.id);
+      for (const c of chapters) {
+        const cdate = (c.published_at ?? lastmod).split("T")[0];
+        urls.push(
+          `  <url>\n    <loc>${origin}/read/${escapeXml(n.slug)}/${c.number}</loc>\n    <lastmod>${cdate}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.5</priority>\n  </url>`
+        );
+      }
     }
-  }
+  } catch { /* skip on error — static URLs still emitted */ }
 
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>\n`;
+}
+
+function buildRobotsTxt(): string {
+  const origin = getSiteUrl();
+  return [
+    "User-agent: *",
+    "Allow: /",
+    "Allow: /novel/",
+    "Allow: /read/",
+    "Allow: /search",
+    "Allow: /about",
+    "Allow: /contact",
+    "Allow: /privacy",
+    "Allow: /terms",
+    "Allow: /dmca",
+    "Disallow: /admin",
+    "Disallow: /admin/",
+    "Disallow: /favorites",
+    "",
+    `Sitemap: ${origin}/sitemap.xml`,
+    "",
+  ].join("\n");
 }
 
 function sitemapHandler(_req: unknown, res: { setHeader: (k: string, v: string) => void; end: (s: string) => void; statusCode: number }) {
@@ -150,6 +180,29 @@ export function sitemapPlugin(): Plugin {
       server.middlewares.use("/sitemap.xml", (req, res) => {
         void sitemapHandler(req, res)();
       });
+    },
+    async writeBundle(options) {
+      const dir = typeof options.dir === "string" ? options.dir : (options as { output?: { dir?: string } }).output?.dir || "dist";
+      const outDir = resolve(dir);
+      mkdirSync(outDir, { recursive: true });
+
+      // Write sitemap.xml as a static file for production hosts.
+      try {
+        const xml = await buildSitemap();
+        writeFileSync(resolve(outDir, "sitemap.xml"), xml);
+        console.log("[sitemap] wrote sitemap.xml");
+      } catch (e) {
+        console.error(`[sitemap] failed to write sitemap.xml: ${e instanceof Error ? e.message : String(e)}`);
+      }
+
+      // Write robots.txt with absolute sitemap URL from VITE_SITE_URL.
+      try {
+        const robots = buildRobotsTxt();
+        writeFileSync(resolve(outDir, "robots.txt"), robots);
+        console.log("[sitemap] wrote robots.txt");
+      } catch (e) {
+        console.error(`[sitemap] failed to write robots.txt: ${e instanceof Error ? e.message : String(e)}`);
+      }
     },
   };
 }
