@@ -32,7 +32,16 @@ export default function HomePage() {
         if (!active) return;
         setNovels(n);
         setGenres(g.map((x) => x.name));
-        setHistory(getReadingHistory());
+        const stored = getReadingHistory();
+        const byId = new Map(n.map((nv) => [nv.id, nv]));
+        setHistory(
+          stored.map((h) => {
+            const match = byId.get(h.novelId);
+            return match
+              ? { ...h, novelCoverUrl: match.coverUrl, novelTitle: match.title, novelSlug: match.slug }
+              : h;
+          }),
+        );
         setError(null);
       } catch (e) {
         if (active) setError(e instanceof Error ? e.message : "Something went wrong while loading novels. Please try again.");
