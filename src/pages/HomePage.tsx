@@ -119,14 +119,14 @@ export default function HomePage() {
       {/* Continue Reading */}
       {history.length > 0 && (
         <Section title="Continue Reading">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {history.slice(0, 6).map((h) => (
               <button
                 key={h.novelId}
                 onClick={() => navigate({ name: "reader", slug: h.novelSlug, chapter: h.chapterNumber })}
                 className="group flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 text-left transition-all hover:border-amber-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-amber-700"
               >
-                <Cover title={h.novelTitle} hue={h.novelCoverHue} className="h-16 w-12 shrink-0" />
+                <Cover title={h.novelTitle} hue={h.novelCoverHue} coverUrl={h.novelCoverUrl} className="h-16 w-12 shrink-0" />
                 <div className="min-w-0 flex-1">
                   <h3 className="truncate text-sm font-semibold text-slate-900 group-hover:text-amber-600 dark:text-slate-100 dark:group-hover:text-amber-400">{h.novelTitle}</h3>
                   <p className="truncate text-xs text-slate-500 dark:text-slate-400">Ch. {h.chapterNumber}: {h.chapterTitle}</p>

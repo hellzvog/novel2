@@ -5,6 +5,7 @@ export interface ReadingHistoryEntry {
   novelSlug: string;
   novelTitle: string;
   novelCoverHue: number;
+  novelCoverUrl?: string | null;
   chapterNumber: number;
   chapterTitle: string;
   lastReadAt: number;
@@ -73,6 +74,7 @@ export function saveReadingHistory(novel: Novel, chapter: Chapter): void {
     novelSlug: novel.slug,
     novelTitle: novel.title,
     novelCoverHue: novel.coverHue,
+    novelCoverUrl: novel.coverUrl,
     chapterNumber: chapter.number,
     chapterTitle: chapter.title,
     lastReadAt: Date.now(),
