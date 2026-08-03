@@ -64,10 +64,11 @@ export default function ChapterReaderPage({ slug, chapter }: { slug: string; cha
   }, [slug, chapter]);
 
   useSeo({
-    title: novel && currentChapter ? `${currentChapter.title} — ${novel.title} — LumenNovel` : "Reading — LumenNovel",
-    description: novel && currentChapter ? `Read ${currentChapter.title} from ${novel.title} by ${novel.author} on LumenNovel.` : undefined,
+    title: novel && currentChapter ? `${novel.title} Chapter ${currentChapter.number} - AddNovel` : "Reading — AddNovel",
+    description: novel && currentChapter ? `Read ${novel.title} Chapter ${currentChapter.number} online in English for free on AddNovel.` : undefined,
     path: `/read/${slug}/${chapter}`,
     type: "article",
+    image: novel?.coverUrl ?? undefined,
     publishedTime: currentChapter?.publishedAt,
   });
   useJsonLd("ld-chapter", novel && currentChapter ? buildChapterJsonLd(

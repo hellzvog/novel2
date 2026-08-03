@@ -1,5 +1,10 @@
 import { useEffect } from "react";
 
+export const SITE_NAME = "AddNovel";
+export const SITE_TAGLINE = "Read Free English Web Novels Online";
+export const SITE_DESCRIPTION =
+  "Read thousands of English translated web novels for free on AddNovel.";
+
 /**
  * Returns the configured site URL, falling back to the current origin.
  * Set VITE_SITE_URL in .env to the canonical public URL (e.g. https://example.com).
@@ -8,7 +13,7 @@ export function getSiteUrl(): string {
   const envUrl = import.meta.env.VITE_SITE_URL as string | undefined;
   if (envUrl) return envUrl.replace(/\/$/, "");
   if (typeof window !== "undefined") return window.location.origin;
-  return "https://lumen-novel.bolt.new";
+  return "http://localhost:5173";
 }
 
 /**
@@ -21,6 +26,11 @@ export function buildUrl(path: string): string {
   return `${base}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
+/** Default Open Graph image (1200x630). */
+export const DEFAULT_OG_IMAGE = "/og-default.svg";
+
+type RobotsMode = "index" | "noindex";
+
 interface SeoOptions {
   title: string;
   description?: string;
@@ -28,6 +38,7 @@ interface SeoOptions {
   image?: string;
   type?: "website" | "article" | "book";
   publishedTime?: string;
+  robots?: RobotsMode;
 }
 
 function upsertMeta(attr: "name" | "property", key: string, content: string) {
@@ -58,29 +69,30 @@ function removeLink(rel: string) {
   document.head.querySelector(`link[rel="${rel}"]`)?.remove();
 }
 
-const DEFAULT_IMAGE = "https://bolt.new/static/og_default.png";
-
 /**
- * Hook that sets document title, canonical URL, and Open Graph / Twitter meta tags.
- * Cleans up on unmount.
+ * Hook that sets document title, canonical URL, robots meta, and
+ * Open Graph / Twitter meta tags. Cleans up on unmount.
  */
 export function useSeo(opts: SeoOptions) {
   useEffect(() => {
     const url = buildUrl(opts.path);
-    const image = opts.image || DEFAULT_IMAGE;
+    const image = opts.image ? (opts.image.startsWith("http") ? opts.image : buildUrl(opts.image)) : buildUrl(DEFAULT_OG_IMAGE);
     const title = opts.title;
-    const description = opts.description || "Read free serialized novels online at LumenNovel.";
+    const description = opts.description || SITE_DESCRIPTION;
+    const robots = opts.robots === "noindex" ? "noindex, nofollow" : "index, follow";
 
     document.title = title;
 
     upsertLink("canonical", url);
+
+    upsertMeta("name", "robots", robots);
 
     upsertMeta("property", "og:title", title);
     upsertMeta("property", "og:description", description);
     upsertMeta("property", "og:url", url);
     upsertMeta("property", "og:image", image);
     upsertMeta("property", "og:type", opts.type || "website");
-    upsertMeta("property", "og:site_name", "LumenNovel");
+    upsertMeta("property", "og:site_name", SITE_NAME);
 
     upsertMeta("name", "twitter:card", "summary_large_image");
     upsertMeta("name", "twitter:title", title);
@@ -93,6 +105,7 @@ export function useSeo(opts: SeoOptions) {
 
     return () => {
       removeLink("canonical");
+      removeMeta("name", "robots");
       removeMeta("property", "og:title");
       removeMeta("property", "og:description");
       removeMeta("property", "og:url");
@@ -107,5 +120,13 @@ export function useSeo(opts: SeoOptions) {
         removeMeta("property", "article:published_time");
       }
     };
-  }, [opts.title, opts.description, opts.path, opts.image, opts.type, opts.publishedTime]);
+  }, [opts.title, opts.description, opts.path, opts.image, opts.type, opts.publishedTime, opts.robots]);
+}
+
+/** Trim a synopsis to ~160 chars at a word boundary. */
+export function trimDescription(text: string, max = 160): string {
+  if (text.length <= max) return text;
+  const slice = text.slice(0, max);
+  const lastSpace = slice.lastIndexOf(" ");
+  return `${slice.slice(0, lastSpace > 0 ? lastSpace : max)}…`;
 }

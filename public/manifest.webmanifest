@@ -1,7 +1,7 @@
 {
-  "name": "LumenNovel — Read Novels Online",
-  "short_name": "LumenNovel",
-  "description": "Read free serialized novels online at LumenNovel. Browse by genre, status, and popularity.",
+  "name": "AddNovel - Read Free English Web Novels Online",
+  "short_name": "AddNovel",
+  "description": "Read thousands of English translated web novels for free on AddNovel.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",

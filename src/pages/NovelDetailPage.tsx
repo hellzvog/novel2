@@ -8,7 +8,7 @@ import Section from "../components/Section";
 import NotFound from "../components/NotFound";
 import { isFavorite, toggleFavorite, getLastReadChapter } from "../lib/reader-storage";
 import { useJsonLd, buildBookJsonLd, buildBreadcrumbJsonLd } from "../lib/jsonld";
-import { useSeo } from "../lib/seo";
+import { useSeo, trimDescription } from "../lib/seo";
 import AdBanner from "../components/AdBanner";
 
 export default function NovelDetailPage({ slug }: { slug: string }) {
@@ -51,14 +51,15 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
   }, [slug]);
 
   useSeo({
-    title: novel ? `${novel.title} by ${novel.author} — LumenNovel` : "Novel — LumenNovel",
-    description: novel ? novel.synopsis.slice(0, 160) : undefined,
+    title: novel ? `${novel.title} - Read Online | AddNovel` : "Novel — AddNovel",
+    description: novel ? trimDescription(novel.synopsis) : undefined,
     path: `/novel/${slug}`,
     type: "book",
+    image: novel?.coverUrl ?? undefined,
   });
   useJsonLd("ld-book", novel ? buildBookJsonLd({
     title: novel.title, author: novel.author, synopsis: novel.synopsis,
-    genres: novel.genres, slug: novel.slug,
+    genres: novel.genres, slug: novel.slug, coverUrl: novel.coverUrl,
   }) : null);
   useJsonLd("ld-breadcrumb-novel", novel ? buildBreadcrumbJsonLd([
     { name: "Home", path: "/" },

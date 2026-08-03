@@ -4,18 +4,18 @@ export default function PrivacyPage() {
   return (
     <LegalPage
       title="Privacy Policy"
-      description="How LumenNovel handles cookies, analytics, local storage, advertising, and third-party services."
+      description="How AddNovel handles cookies, analytics, local storage, advertising, and third-party services."
       path="/privacy"
     >
       <p>
-        This Privacy Policy explains how LumenNovel ("we", "us", or "our") collects, uses, and protects
+        This Privacy Policy explains how AddNovel ("we", "us", or "our") collects, uses, and protects
         information when you visit our website. We are committed to being transparent about what data we
         process and to giving you meaningful control over your privacy.
       </p>
 
       <h2>Information We Collect</h2>
       <p>
-        LumenNovel is designed to work with minimal personal data. The information we may process includes:
+        AddNovel is designed to work with minimal personal data. The information we may process includes:
       </p>
       <ul>
         <li><strong>Browser information:</strong> browser type, version, language, and operating system, collected automatically when you visit.</li>
@@ -41,7 +41,7 @@ export default function PrivacyPage() {
 
       <h2>Local Storage and User Preferences</h2>
       <p>
-        To preserve your experience across visits, LumenNovel stores your reading position, favorites list,
+        To preserve your experience across visits, AddNovel stores your reading position, favorites list,
         theme choice (light or dark), and other preferences in your browser's local storage. This data never
         leaves your device and is not shared with us or any third party. You can clear it at any time by
         clearing your browser data.
@@ -101,7 +101,7 @@ export default function PrivacyPage() {
 
       <h2>Children's Privacy</h2>
       <p>
-        LumenNovel is not directed at children under 13, and we do not knowingly collect personal
+        AddNovel is not directed at children under 13, and we do not knowingly collect personal
         information from children. If you believe a child has provided us with personal data, please contact
         us and we will take steps to delete it.
       </p>
@@ -115,7 +115,7 @@ export default function PrivacyPage() {
       <h2>Contact Us</h2>
       <p>
         If you have questions about this Privacy Policy, please email{" "}
-        <a href="mailto:privacy@lumennovel.example">privacy@lumennovel.example</a>.
+        <a href="mailto:privacy@addnovel.example">privacy@addnovel.example</a>.
       </p>
     </LegalPage>
   );

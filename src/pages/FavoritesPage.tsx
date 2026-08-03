@@ -4,10 +4,18 @@ import { useRouter } from "../lib/router";
 import Cover from "../components/Cover";
 import Section from "../components/Section";
 import { getFavorites, removeFavorite, type FavoriteEntry } from "../lib/reader-storage";
+import { useSeo } from "../lib/seo";
 
 export default function FavoritesPage() {
   const { navigate } = useRouter();
   const [favorites, setFavorites] = useState<FavoriteEntry[]>([]);
+
+  useSeo({
+    title: "Favorites - AddNovel",
+    description: "Your favorite novels on AddNovel.",
+    path: "/favorites",
+    robots: "noindex",
+  });
 
   useEffect(() => {
     setFavorites(getFavorites());

@@ -6,25 +6,25 @@ export default function ContactPage() {
     {
       icon: Mail,
       title: "General Inquiries",
-      email: "hello@lumennovel.example",
+      email: "hello@addnovel.example",
       desc: "Questions, feedback, or suggestions about the platform or any novel.",
     },
     {
       icon: Briefcase,
       title: "Business Inquiries",
-      email: "business@lumennovel.example",
+      email: "business@addnovel.example",
       desc: "Partnerships, advertising, or other commercial opportunities.",
     },
     {
       icon: ShieldAlert,
       title: "Copyright Requests",
-      email: "copyright@lumennovel.example",
+      email: "copyright@addnovel.example",
       desc: "Permission requests or questions about copyrighted material.",
     },
     {
       icon: FileWarning,
       title: "DMCA / Takedown Requests",
-      email: "dmca@lumennovel.example",
+      email: "dmca@addnovel.example",
       desc: "Formal takedown notices under the DMCA. Please include the details listed on our DMCA page.",
     },
   ];
@@ -32,7 +32,7 @@ export default function ContactPage() {
   return (
     <LegalPage
       title="Contact"
-      description="Get in touch with LumenNovel for general inquiries, business, copyright, and DMCA requests."
+      description="Get in touch with AddNovel for general inquiries, business, copyright, and DMCA requests."
       path="/contact"
     >
       <p>
@@ -62,7 +62,7 @@ export default function ContactPage() {
 
       <h2>Mailing Address</h2>
       <p>
-        LumenNovel<br />
+        AddNovel<br />
         [Street Address]<br />
         [City, State / Province, Postal Code]<br />
         [Country]

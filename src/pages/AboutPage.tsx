@@ -5,18 +5,18 @@ export default function AboutPage() {
   return (
     <LegalPage
       title="About Us"
-      description="Learn about LumenNovel, a clean online English web novel reading platform for serialized fiction."
+      description="Learn about AddNovel, a clean online English web novel reading platform for serialized fiction."
       path="/about"
     >
       <p>
-        LumenNovel is an online English web novel reading platform dedicated to bringing readers a clean,
+        AddNovel is an online English web novel reading platform dedicated to bringing readers a clean,
         modern, and distraction-free environment for discovering and enjoying serialized fiction. Our goal
         is to make every chapter easy to find, easy to read, and pleasant to return to.
       </p>
 
       <h2>Our Purpose</h2>
       <p>
-        We built LumenNovel to give readers a single, organized home for web novels. Whether you follow an
+        We built AddNovel to give readers a single, organized home for web novels. Whether you follow an
         ongoing series or prefer to binge a completed story, the platform is designed to help you find your
         next read by genre, status, and popularity, and to keep your place across chapters.
       </p>
@@ -37,7 +37,7 @@ export default function AboutPage() {
 
       <h2>Respect for Copyright</h2>
       <p>
-        We take copyright seriously. LumenNovel respects the rights of authors and rights holders, and we
+        We take copyright seriously. AddNovel respects the rights of authors and rights holders, and we
         provide a clear process for submitting takedown requests. If you believe any content hosted here
         infringes your rights, please see our <a href="/dmca">DMCA / Copyright Policy</a> page for
         instructions on how to submit a notice.
@@ -47,7 +47,7 @@ export default function AboutPage() {
       <p>
         Questions, feedback, and partnership inquiries are welcome. Visit our <a href="/contact">Contact</a>
         page for the appropriate email address, or write to us at{" "}
-        <a href="mailto:hello@lumennovel.example">hello@lumennovel.example</a>.
+        <a href="mailto:hello@addnovel.example">hello@addnovel.example</a>.
       </p>
 
       <div className="mt-10 grid gap-4 sm:grid-cols-2">

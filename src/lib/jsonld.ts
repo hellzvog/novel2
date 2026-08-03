@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { buildUrl } from "./seo";
+import { buildUrl, SITE_NAME, SITE_DESCRIPTION } from "./seo";
 
 type JsonLdObject = Record<string, unknown>;
 
@@ -33,6 +33,26 @@ export function useJsonLd(id: string, data: JsonLdObject | null) {
   }, [id, data]);
 }
 
+/** Build a WebSite JSON-LD object with SearchAction for the homepage. */
+export function buildWebsiteJsonLd(): JsonLdObject {
+  const origin = buildUrl("/");
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: SITE_NAME,
+    url: origin,
+    description: SITE_DESCRIPTION,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${origin}/search?query={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
+  };
+}
+
 /** Build a BreadcrumbList JSON-LD object from an ordered list of {name, path} items. */
 export function buildBreadcrumbJsonLd(
   items: { name: string; path: string }[]
@@ -56,8 +76,9 @@ export function buildBookJsonLd(novel: {
   synopsis: string;
   genres: string[];
   slug: string;
+  coverUrl?: string | null;
 }): JsonLdObject {
-  return {
+  const obj: JsonLdObject = {
     "@context": "https://schema.org",
     "@type": "Book",
     name: novel.title,
@@ -68,7 +89,14 @@ export function buildBookJsonLd(novel: {
     description: novel.synopsis,
     genre: novel.genres,
     url: buildUrl(`/novel/${novel.slug}`),
+    inLanguage: "en",
   };
+  if (novel.coverUrl) {
+    obj.image = novel.coverUrl.startsWith("http")
+      ? novel.coverUrl
+      : buildUrl(novel.coverUrl);
+  }
+  return obj;
 }
 
 /** Build an Article JSON-LD object for a chapter reader page. */
