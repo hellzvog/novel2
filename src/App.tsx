@@ -3,6 +3,7 @@ import { RouterProvider, useRouter } from "./lib/router";
 import { ThemeProvider } from "./lib/theme";
 import { AdminAuthProvider, useAdminAuth } from "./lib/admin-auth";
 import { AdSenseProvider, useAdSense } from "./lib/adsense";
+import { useSeo } from "./lib/seo";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -57,6 +58,7 @@ function Pages() {
 
   // Admin login page renders standalone (no site header/footer)
   if (isAdminLogin) {
+    useSeo({ title: "Admin Login - AddNovel", path: "/admin/login", robots: "noindex" });
     if (user && isAdmin) {
       navigate({ name: "admin" });
       return null;
@@ -70,6 +72,7 @@ function Pages() {
 
   // Admin pages render with admin layout (guard handled by redirect above)
   if (isAdminRoute) {
+    useSeo({ title: "Admin - AddNovel", path: "/admin", robots: "noindex" });
     if (loading || !user || !isAdmin) {
       return (
         <div className="flex min-h-screen items-center justify-center bg-slate-100 dark:bg-slate-900">

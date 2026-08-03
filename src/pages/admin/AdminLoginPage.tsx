@@ -81,7 +81,7 @@ export default function AdminLoginPage() {
           </form>
         </div>
         <p className="mt-6 text-center text-xs text-slate-500">
-          LumenNovel Admin CMS — authorized personnel only
+          AddNovel Admin CMS — authorized personnel only
         </p>
       </div>
     </div>

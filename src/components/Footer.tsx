@@ -23,7 +23,7 @@ export default function Footer() {
                 <BookOpen size={18} />
               </span>
               <span className="font-serif text-lg font-bold text-slate-900 dark:text-white">
-                Lumen<span className="text-amber-500">Novel</span>
+                Add<span className="text-amber-500">Novel</span>
               </span>
             </div>
             <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
@@ -69,7 +69,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-10 border-t border-slate-200 pt-6 text-center text-xs text-slate-400 dark:border-slate-800">
-          <p>© {new Date().getFullYear()} LumenNovel. A frontend prototype. All novel data is fictional mock content.</p>
+          <p>© {new Date().getFullYear()} AddNovel. All rights reserved.</p>
         </div>
       </div>
     </footer>

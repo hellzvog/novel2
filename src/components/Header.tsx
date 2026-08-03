@@ -39,7 +39,7 @@ export default function Header() {
             <BookOpen size={20} />
           </span>
           <span className="hidden font-serif text-xl font-bold tracking-tight text-slate-900 dark:text-white sm:inline">
-            Lumen<span className="text-amber-500">Novel</span>
+            Add<span className="text-amber-500">Novel</span>
           </span>
         </button>
 

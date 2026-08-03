@@ -18,8 +18,8 @@ export default function SearchPage({ initialQuery, initialGenre, initialStatus }
 
   const seoPath = initialGenre ? `/search?genre=${encodeURIComponent(initialGenre)}` : "/search";
   useSeo({
-    title: initialGenre ? `${initialGenre} Novels — LumenNovel` : initialQuery ? `Search: ${initialQuery} — LumenNovel` : "Browse Novels — LumenNovel",
-    description: initialGenre ? `Browse ${initialGenre} novels on LumenNovel. Read free serialized fiction online.` : "Search and browse novels by title, author, genre, and status on LumenNovel.",
+    title: initialGenre ? `${initialGenre} Novels - AddNovel` : initialQuery ? `Search Novels - AddNovel` : "Browse Novels - AddNovel",
+    description: initialGenre ? `Browse the best ${initialGenre} novels online on AddNovel.` : "Search thousands of novels on AddNovel.",
     path: seoPath,
   });
   const [page, setPage] = useState(1);

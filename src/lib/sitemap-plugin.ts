@@ -55,7 +55,7 @@ function today(): string {
 function getSiteUrl(): string {
   const envUrl = process.env.VITE_SITE_URL || process.env.SITE_URL;
   if (envUrl) return envUrl.replace(/\/$/, "");
-  return "https://lumen-novel.bolt.new";
+  return "http://localhost:5173";
 }
 
 async function buildSitemap(): Promise<string> {

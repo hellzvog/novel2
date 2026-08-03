@@ -10,7 +10,7 @@ interface LegalPageProps {
 }
 
 export default function LegalPage({ title, description, path, children }: LegalPageProps) {
-  useSeo({ title: `${title} — LumenNovel`, description, path });
+  useSeo({ title: `${title} - AddNovel`, description, path });
   useJsonLd("ld-breadcrumb-legal", buildBreadcrumbJsonLd([
     { name: "Home", path: "/" },
     { name: title, path },
