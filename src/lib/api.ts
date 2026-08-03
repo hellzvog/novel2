@@ -9,6 +9,8 @@ export interface Chapter {
   content: string[];
   publishedAt: string;
   status: "published" | "draft";
+  published: boolean;
+  publishAt: string | null;
 }
 
 export interface Novel {
@@ -58,6 +60,8 @@ export interface ChapterInput {
   content: string[];
   publishedAt: string;
   status: "published" | "draft";
+  published?: boolean;
+  publishAt?: string | null;
 }
 
 function slugify(text: string): string {
@@ -90,6 +94,8 @@ interface ChapterRow {
   content: string[] | string;
   published_at: string;
   status: string;
+  published: boolean;
+  publish_at: string | null;
 }
 
 function mapNovel(row: NovelRow, chapters: Chapter[] = []): Novel {
@@ -125,6 +131,8 @@ function mapChapter(row: ChapterRow): Chapter {
     content,
     publishedAt: row.published_at ?? "",
     status: (row.status as "published" | "draft") ?? "published",
+    published: row.published ?? true,
+    publishAt: row.publish_at ?? null,
   };
 }
 
@@ -162,7 +170,16 @@ export async function ensureTags(names: string[]): Promise<void> {
 
 // ---------- Novels ----------
 
+export async function autoPublishChapters(): Promise<void> {
+  try {
+    await supabase.rpc("auto_publish_chapters");
+  } catch {
+    // Best-effort: don't block page load if RPC fails
+  }
+}
+
 export async function listNovels(): Promise<Novel[]> {
+  await autoPublishChapters();
   const { data, error } = await supabase
     .from("novels")
     .select(NOVEL_SELECT)
@@ -172,6 +189,7 @@ export async function listNovels(): Promise<Novel[]> {
 }
 
 export async function getNovel(slug: string): Promise<Novel | null> {
+  await autoPublishChapters();
   const { data, error } = await supabase
     .from("novels")
     .select(NOVEL_SELECT)
@@ -183,6 +201,18 @@ export async function getNovel(slug: string): Promise<Novel | null> {
   return mapNovel(data as unknown as NovelRow, chapters);
 }
 
+export async function getNovelAdmin(slug: string): Promise<Novel | null> {
+  const { data, error } = await supabase
+    .from("novels")
+    .select(NOVEL_SELECT)
+    .eq("slug", slug)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const chapters = await listChaptersAdmin(slug);
+  return mapNovel(data as unknown as NovelRow, chapters);
+}
+
 export async function getNovelById(id: string): Promise<Novel | null> {
   const { data, error } = await supabase
     .from("novels")
@@ -191,7 +221,7 @@ export async function getNovelById(id: string): Promise<Novel | null> {
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;
-  const chapters = await listChapters(data.slug);
+  const chapters = await listChaptersAdmin(data.slug);
   return mapNovel(data as unknown as NovelRow, chapters);
 }
 
@@ -353,12 +383,27 @@ export async function incrementViews(slug: string): Promise<void> {
 
 // ---------- Chapters ----------
 
+const CHAPTER_SELECT = "id, number, title, content, published_at, status, published, publish_at";
+
 export async function listChapters(novelSlug: string): Promise<Chapter[]> {
   const { data: novel } = await supabase.from("novels").select("id").eq("slug", novelSlug).maybeSingle();
   if (!novel) return [];
   const { data, error } = await supabase
     .from("chapters")
-    .select("id, number, title, content, published_at, status")
+    .select(CHAPTER_SELECT)
+    .eq("novel_id", novel.id)
+    .eq("published", true)
+    .order("number", { ascending: true });
+  if (error) throw error;
+  return (data ?? []).map(mapChapter);
+}
+
+export async function listChaptersAdmin(novelSlug: string): Promise<Chapter[]> {
+  const { data: novel } = await supabase.from("novels").select("id").eq("slug", novelSlug).maybeSingle();
+  if (!novel) return [];
+  const { data, error } = await supabase
+    .from("chapters")
+    .select(CHAPTER_SELECT)
     .eq("novel_id", novel.id)
     .order("number", { ascending: true });
   if (error) throw error;
@@ -367,6 +412,14 @@ export async function listChapters(novelSlug: string): Promise<Chapter[]> {
 
 export async function getChapter(novelSlug: string, chapterNumber: number): Promise<{ novel: Novel; chapter: Chapter } | null> {
   const novel = await getNovel(novelSlug);
+  if (!novel) return null;
+  const chapter = novel.chapters.find((c) => c.number === chapterNumber);
+  if (!chapter) return null;
+  return { novel, chapter };
+}
+
+export async function getChapterAdmin(novelSlug: string, chapterNumber: number): Promise<{ novel: Novel; chapter: Chapter } | null> {
+  const novel = await getNovelAdmin(novelSlug);
   if (!novel) return null;
   const chapter = novel.chapters.find((c) => c.number === chapterNumber);
   if (!chapter) return null;
@@ -385,8 +438,10 @@ export async function createChapter(novelSlug: string, input: ChapterInput): Pro
       content: input.content,
       published_at: input.publishedAt,
       status: input.status,
+      published: input.published ?? false,
+      publish_at: input.publishAt ?? null,
     })
-    .select("id, number, title, content, published_at, status")
+    .select(CHAPTER_SELECT)
     .single();
   if (error) throw error;
   return mapChapter(data as ChapterRow);
@@ -401,12 +456,14 @@ export async function updateChapter(novelSlug: string, chapterNumber: number, up
   if (updates.publishedAt !== undefined) updateData.published_at = updates.publishedAt;
   if (updates.number !== undefined) updateData.number = updates.number;
   if (updates.status !== undefined) updateData.status = updates.status;
+  if (updates.published !== undefined) updateData.published = updates.published;
+  if (updates.publishAt !== undefined) updateData.publish_at = updates.publishAt;
   const { data, error } = await supabase
     .from("chapters")
     .update(updateData)
     .eq("novel_id", novel.id)
     .eq("number", chapterNumber)
-    .select("id, number, title, content, published_at, status")
+    .select(CHAPTER_SELECT)
     .single();
   if (error) throw error;
   return mapChapter(data as ChapterRow);

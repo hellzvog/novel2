@@ -18,16 +18,41 @@ import mammoth from "mammoth";
 import JSZip from "jszip";
 import {
   listNovels,
-  getNovel,
+  getNovelAdmin,
   createChapter,
   type Novel,
 } from "../../lib/api";
+import { Calendar, Zap, Clock } from "lucide-react";
+import ScheduleOptions, { type ScheduleMode } from "../../components/admin/ScheduleOptions";
 import { parseDocx, paragraphsToContent, paragraphsToPreviewHtml, type ParsedDocx, type ParsedParagraph } from "../../lib/docx";
 import { parseTxt, type ParsedTxt } from "../../lib/txt";
 import { useRouter } from "../../lib/router";
 import AdminLayout from "../../components/admin/AdminLayout";
 
 type ImportResult = { title: string; paragraphs: number; status: "ok" | "error"; message?: string };
+
+function jakartaNow(): string {
+  const now = new Date();
+  const jakarta = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Jakarta" }));
+  const offset = jakarta.getTimezoneOffset() * 60000;
+  const local = new Date(jakarta.getTime() - offset);
+  return local.toISOString().slice(0, 16);
+}
+
+function toIsoFromJakarta(localStr: string): string {
+  const jakartaOffsetMinutes = -7 * 60;
+  const local = new Date(localStr);
+  const utc = new Date(local.getTime() - jakartaOffsetMinutes * 60000);
+  return utc.toISOString();
+}
+
+function computePublishAt(index: number, mode: ScheduleMode, startDate: string, intervalHours: number): string | null {
+  if (mode === "immediate") return null;
+  const hours = mode === "daily" ? 24 : intervalHours;
+  const base = new Date(toIsoFromJakarta(startDate));
+  const publishTime = new Date(base.getTime() + index * hours * 3600_000);
+  return publishTime.toISOString();
+}
 
 type TxtPreviewItem = {
   fileName: string;
@@ -62,6 +87,9 @@ export default function AdminImportPage() {
   const [txtParsed, setTxtParsed] = useState<ParsedTxt | null>(null);
   const [txtPreviewList, setTxtPreviewList] = useState<TxtPreviewItem[]>([]);
   const [txtImporting, setTxtImporting] = useState(false);
+  const [scheduleMode, setScheduleMode] = useState<ScheduleMode>("immediate");
+  const [scheduleStart, setScheduleStart] = useState(jakartaNow());
+  const [intervalHours, setIntervalHours] = useState(24);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const multiTxtInputRef = useRef<HTMLInputElement>(null);
@@ -142,11 +170,13 @@ export default function AdminImportPage() {
     setError(null);
     setSuccess(null);
     try {
-      const novel = await getNovel(selectedNovel);
+      const novel = await getNovelAdmin(selectedNovel);
       const existing = novel?.chapters.find((c) => c.number === chapterNumber);
 
       const content = paragraphsToContent(parsed.paragraphs);
       const title = chapterTitle.trim() || selectedFile?.name.replace(/\.docx$/i, "") || `Chapter ${chapterNumber}`;
+      const isPublished = scheduleMode === "immediate";
+      const publishAt = scheduleMode !== "immediate" ? toIsoFromJakarta(scheduleStart) : null;
 
       if (existing) {
         const { supabase } = await import("../../lib/supabase");
@@ -163,6 +193,8 @@ export default function AdminImportPage() {
             content,
             published_at: new Date().toISOString().slice(0, 10),
             status: chapterStatus,
+            published: isPublished,
+            publish_at: publishAt,
           })
           .eq("novel_id", novelRow.id)
           .eq("number", chapterNumber);
@@ -174,6 +206,8 @@ export default function AdminImportPage() {
           content,
           publishedAt: new Date().toISOString().slice(0, 10),
           status: chapterStatus,
+          published: isPublished,
+          publishAt,
         });
       }
 
@@ -259,11 +293,13 @@ export default function AdminImportPage() {
     setError(null);
     setSuccess(null);
     try {
-      const novel = await getNovel(selectedNovel);
+      const novel = await getNovelAdmin(selectedNovel);
       const existing = novel?.chapters.find((c) => c.number === chapterNumber);
 
       const content = paragraphsToContent(txtParsed.paragraphs);
       const title = chapterTitle.trim() || selectedFile?.name.replace(/\.txt$/i, "") || `Chapter ${chapterNumber}`;
+      const isPublished = scheduleMode === "immediate";
+      const publishAt = scheduleMode !== "immediate" ? toIsoFromJakarta(scheduleStart) : null;
 
       if (existing) {
         const { supabase } = await import("../../lib/supabase");
@@ -280,6 +316,8 @@ export default function AdminImportPage() {
             content,
             published_at: new Date().toISOString().slice(0, 10),
             status: chapterStatus,
+            published: isPublished,
+            publish_at: publishAt,
           })
           .eq("novel_id", novelRow.id)
           .eq("number", chapterNumber);
@@ -291,6 +329,8 @@ export default function AdminImportPage() {
           content,
           publishedAt: new Date().toISOString().slice(0, 10),
           status: chapterStatus,
+          published: isPublished,
+          publishAt,
         });
       }
 
@@ -314,7 +354,7 @@ export default function AdminImportPage() {
     setSuccess(null);
     setTxtPreviewList([]);
     try {
-      const novel = await getNovel(selectedNovel);
+      const novel = await getNovelAdmin(selectedNovel);
       const existingNums = new Set(novel ? novel.chapters.map((c) => c.number) : []);
       const seenNums = new Set<number>();
       const items: TxtPreviewItem[] = [];
@@ -402,14 +442,19 @@ export default function AdminImportPage() {
       }
 
       const imported: ImportResult[] = [];
-      for (const item of valid) {
+      for (let idx = 0; idx < valid.length; idx++) {
+        const item = valid[idx];
         try {
+          const isPublished = scheduleMode === "immediate";
+          const publishAt = computePublishAt(idx, scheduleMode, scheduleStart, intervalHours);
           await createChapter(selectedNovel, {
             number: item.number,
             title: item.title || `Chapter ${item.number}`,
             content: paragraphsToContent(item.paragraphs),
             publishedAt: new Date().toISOString().slice(0, 10),
             status: chapterStatus,
+            published: isPublished,
+            publishAt,
           });
           imported.push({ title: item.title, paragraphs: item.paragraphs.length, status: "ok" });
         } catch (e) {
@@ -442,11 +487,12 @@ export default function AdminImportPage() {
         return;
       }
 
-      const novel = await getNovel(selectedNovel);
+      const novel = await getNovelAdmin(selectedNovel);
       let nextNum = novel ? novel.chapters.reduce((max, c) => Math.max(max, c.number), 0) + 1 : 1;
       const existingNums = new Set(novel ? novel.chapters.map((c) => c.number) : []);
       const imported: ImportResult[] = [];
 
+      let chapterIdx = 0;
       for (const f of docxFiles) {
         try {
           const arrayBuffer = await f.async("arraybuffer");
@@ -464,13 +510,18 @@ export default function AdminImportPage() {
           const title = result.detectedTitle
             || f.name.replace(/\.docx$/i, "").replace(/^[0-9]+[_\-\s]*/, "");
 
+          const isPublished = scheduleMode === "immediate";
+          const publishAt = computePublishAt(chapterIdx, scheduleMode, scheduleStart, intervalHours);
           await createChapter(selectedNovel, {
             number: num,
             title,
             content: paragraphsToContent(result.paragraphs),
             publishedAt: new Date().toISOString().slice(0, 10),
             status: chapterStatus,
+            published: isPublished,
+            publishAt,
           });
+          chapterIdx++;
           imported.push({ title, paragraphs: result.paragraphs.length, status: "ok" });
           nextNum++;
         } catch (e) {
@@ -654,6 +705,15 @@ export default function AdminImportPage() {
                   )}
                 </div>
 
+                <ScheduleOptions
+                  scheduleMode={scheduleMode}
+                  setScheduleMode={setScheduleMode}
+                  scheduleStart={scheduleStart}
+                  setScheduleStart={setScheduleStart}
+                  intervalHours={intervalHours}
+                  setIntervalHours={setIntervalHours}
+                />
+
                 <div className="flex gap-3">
                   <button
                     onClick={handleConfirmImport}
@@ -729,6 +789,16 @@ export default function AdminImportPage() {
               <option value="published">Published</option>
               <option value="draft">Draft</option>
             </select>
+          </div>
+          <div className="mb-4">
+            <ScheduleOptions
+              scheduleMode={scheduleMode}
+              setScheduleMode={setScheduleMode}
+              scheduleStart={scheduleStart}
+              setScheduleStart={setScheduleStart}
+              intervalHours={intervalHours}
+              setIntervalHours={setIntervalHours}
+            />
           </div>
           <label className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-300 p-10 text-center transition-colors hover:border-amber-400 hover:bg-amber-50 dark:border-slate-600 dark:hover:border-amber-500 dark:hover:bg-slate-700">
             {processing ? <Loader2 size={32} className="animate-spin text-amber-500" /> : <Archive size={32} className="text-slate-400" />}
@@ -856,6 +926,15 @@ export default function AdminImportPage() {
                     </span>
                   )}
                 </div>
+
+                <ScheduleOptions
+                  scheduleMode={scheduleMode}
+                  setScheduleMode={setScheduleMode}
+                  scheduleStart={scheduleStart}
+                  setScheduleStart={setScheduleStart}
+                  intervalHours={intervalHours}
+                  setIntervalHours={setIntervalHours}
+                />
 
                 <div className="flex gap-3">
                   <button
@@ -1003,6 +1082,15 @@ export default function AdminImportPage() {
                   <span>{txtPreviewList.filter((i) => !i.duplicate).length} valid</span>
                   <span className="text-rose-500">{txtPreviewList.filter((i) => i.duplicate).length} duplicates/errors</span>
                 </div>
+
+                <ScheduleOptions
+                  scheduleMode={scheduleMode}
+                  setScheduleMode={setScheduleMode}
+                  scheduleStart={scheduleStart}
+                  setScheduleStart={setScheduleStart}
+                  intervalHours={intervalHours}
+                  setIntervalHours={setIntervalHours}
+                />
 
                 <div className="flex gap-3">
                   <button

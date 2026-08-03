@@ -1,8 +1,39 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Plus, Pencil, Trash2, Loader2, AlertCircle, FileText } from "lucide-react";
-import { getNovel, createChapter, deleteChapter, type Novel, type Chapter } from "../../lib/api";
+import { ArrowLeft, Plus, Pencil, Trash2, Loader2, AlertCircle, FileText, Clock, CheckCircle, Calendar } from "lucide-react";
+import { getNovelAdmin, deleteChapter, type Novel, type Chapter } from "../../lib/api";
 import { useRouter } from "../../lib/router";
 import AdminLayout from "../../components/admin/AdminLayout";
+
+function chapterStatusBadge(c: Chapter) {
+  if (c.published) {
+    return (
+      <span className="flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+        <CheckCircle size={12} /> Published
+      </span>
+    );
+  }
+  if (c.publishAt) {
+    const date = new Date(c.publishAt);
+    const isPast = date.getTime() <= Date.now();
+    if (isPast) {
+      return (
+        <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+          <Clock size={12} /> Publishing…
+        </span>
+      );
+    }
+    return (
+      <span className="flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+        <Calendar size={12} /> {date.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+      </span>
+    );
+  }
+  return (
+    <span className="flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+      Draft
+    </span>
+  );
+}
 
 export default function AdminChaptersPage({ slug }: { slug: string }) {
   const { navigate } = useRouter();
@@ -14,7 +45,7 @@ export default function AdminChaptersPage({ slug }: { slug: string }) {
   const load = async () => {
     try {
       setLoading(true);
-      const n = await getNovel(slug);
+      const n = await getNovelAdmin(slug);
       setNovel(n);
       setError(null);
     } catch (e) {
@@ -38,6 +69,8 @@ export default function AdminChaptersPage({ slug }: { slug: string }) {
       setDeleting(null);
     }
   };
+
+  const publishedCount = novel ? novel.chapters.filter((c) => c.published).length : 0;
 
   return (
     <AdminLayout activeKey="admin-chapters">
@@ -76,7 +109,9 @@ export default function AdminChaptersPage({ slug }: { slug: string }) {
             <FileText size={20} className="text-amber-500" />
             <div>
               <h2 className="font-serif text-base font-bold text-slate-900 dark:text-white">{novel.title}</h2>
-              <p className="text-sm text-slate-400">{novel.chapters.length} chapters total</p>
+              <p className="text-sm text-slate-400">
+                {publishedCount} published · {novel.chapters.length - publishedCount} scheduled/draft · {novel.chapters.length} total
+              </p>
             </div>
           </div>
 
@@ -86,48 +121,46 @@ export default function AdminChaptersPage({ slug }: { slug: string }) {
             </div>
           ) : (
             <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
-              <table className="w-full">
-                <thead className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/50">
-                  <tr>
-                    <th className="w-16 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">#</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Title</th>
-                    <th className="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 sm:table-cell dark:text-slate-400">Date</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Status</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-                  {novel.chapters.map((c) => (
-                    <tr key={c.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                      <td className="px-4 py-3 text-sm font-medium text-slate-500 dark:text-slate-400">{c.number}</td>
-                      <td className="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-200">{c.title}</td>
-                      <td className="hidden px-4 py-3 text-sm text-slate-500 sm:table-cell dark:text-slate-400">{c.publishedAt}</td>
-                      <td className="px-4 py-3">
-                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                          c.status === "published" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
-                        }`}>{c.status}</span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-1">
-                          <button
-                            onClick={() => navigate({ name: "admin-chapter-edit", slug, chapter: c.number })}
-                            className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-amber-600 dark:hover:bg-slate-700"
-                          >
-                            <Pencil size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(c)}
-                            disabled={deleting === c.number}
-                            className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50 dark:hover:bg-rose-900/30"
-                          >
-                            {deleting === c.number ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
-                          </button>
-                        </div>
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/50">
+                    <tr>
+                      <th className="w-16 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">#</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Title</th>
+                      <th className="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 sm:table-cell dark:text-slate-400">Date</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Status</th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                    {novel.chapters.map((c) => (
+                      <tr key={c.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                        <td className="px-4 py-3 text-sm font-medium text-slate-500 dark:text-slate-400">{c.number}</td>
+                        <td className="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-200">{c.title}</td>
+                        <td className="hidden px-4 py-3 text-sm text-slate-500 sm:table-cell dark:text-slate-400">{c.publishedAt}</td>
+                        <td className="px-4 py-3">{chapterStatusBadge(c)}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              onClick={() => navigate({ name: "admin-chapter-edit", slug, chapter: c.number })}
+                              className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-amber-600 dark:hover:bg-slate-700"
+                            >
+                              <Pencil size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(c)}
+                              disabled={deleting === c.number}
+                              className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50 dark:hover:bg-rose-900/30"
+                            >
+                              {deleting === c.number ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, Save, Loader2, AlertCircle, Upload, X } from "lucide-react";
-import { getNovel, getGenres, getTags, createNovel, updateNovel, type Novel, type NovelStatus, type Genre, type Tag } from "../../lib/api";
+import { getNovelAdmin, getGenres, getTags, createNovel, updateNovel, type Novel, type NovelStatus, type Genre, type Tag } from "../../lib/api";
 import { supabase } from "../../lib/supabase";
 import { useRouter } from "../../lib/router";
 import AdminLayout from "../../components/admin/AdminLayout";
@@ -35,7 +35,7 @@ export default function AdminNovelEditPage({ slug }: { slug?: string }) {
         setAllGenres(genres);
         setAllTags(tags);
         if (slug) {
-          const novel = await getNovel(slug);
+          const novel = await getNovelAdmin(slug);
           if (novel) {
             setTitle(novel.title);
             setAltTitle(novel.altTitle);

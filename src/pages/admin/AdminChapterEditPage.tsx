@@ -1,8 +1,40 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Save, Loader2, AlertCircle } from "lucide-react";
-import { getNovel, getChapter, createChapter, updateChapter, type Novel, type Chapter } from "../../lib/api";
+import { ArrowLeft, Save, Loader2, AlertCircle, Calendar, Zap, Clock } from "lucide-react";
+import { getNovelAdmin, getChapterAdmin, createChapter, updateChapter, type Novel, type Chapter } from "../../lib/api";
 import { useRouter } from "../../lib/router";
 import AdminLayout from "../../components/admin/AdminLayout";
+
+type PublishMode = "now" | "schedule";
+
+function jakartaNow(): string {
+  // Get current time in Asia/Jakarta timezone, formatted for datetime-local input
+  const now = new Date();
+  const jakarta = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Jakarta" }));
+  const offset = jakarta.getTimezoneOffset() * 60000;
+  const local = new Date(jakarta.getTime() - offset);
+  return local.toISOString().slice(0, 16);
+}
+
+function toIsoFromJakarta(localStr: string): string {
+  // Interpret the input as Asia/Jakarta time and convert to UTC ISO
+  const jakartaOffsetMinutes = -7 * 60; // WIB is UTC+7
+  const local = new Date(localStr);
+  const utc = new Date(local.getTime() - jakartaOffsetMinutes * 60000);
+  return utc.toISOString();
+}
+
+function formatJakartaFromIso(isoStr: string | null): string {
+  if (!isoStr) return "";
+  try {
+    const d = new Date(isoStr);
+    const jakarta = new Date(d.toLocaleString("en-US", { timeZone: "Asia/Jakarta" }));
+    const offset = jakarta.getTimezoneOffset() * 60000;
+    const local = new Date(jakarta.getTime() - offset);
+    return local.toISOString().slice(0, 16);
+  } catch {
+    return "";
+  }
+}
 
 export default function AdminChapterEditPage({ slug, chapter }: { slug: string; chapter?: number }) {
   const { navigate } = useRouter();
@@ -14,6 +46,8 @@ export default function AdminChapterEditPage({ slug, chapter }: { slug: string; 
   const [content, setContent] = useState("");
   const [publishedAt, setPublishedAt] = useState(new Date().toISOString().slice(0, 10));
   const [status, setStatus] = useState<"published" | "draft">("published");
+  const [publishMode, setPublishMode] = useState<PublishMode>("now");
+  const [scheduleDate, setScheduleDate] = useState(jakartaNow());
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,19 +55,26 @@ export default function AdminChapterEditPage({ slug, chapter }: { slug: string; 
   useEffect(() => {
     (async () => {
       try {
-        const n = await getNovel(slug);
+        const n = await getNovelAdmin(slug);
         setNovel(n);
         if (chapter !== undefined) {
-          const result = await getChapter(slug, chapter);
+          const result = await getChapterAdmin(slug, chapter);
           if (result) {
             setTitle(result.chapter.title);
             setContent(result.chapter.content.join("\n\n"));
             setPublishedAt(result.chapter.publishedAt || new Date().toISOString().slice(0, 10));
             setStatus(result.chapter.status);
             setNumber(result.chapter.number);
+            if (result.chapter.published) {
+              setPublishMode("now");
+            } else if (result.chapter.publishAt) {
+              setPublishMode("schedule");
+              setScheduleDate(formatJakartaFromIso(result.chapter.publishAt));
+            } else {
+              setPublishMode("now");
+            }
           }
         } else if (n) {
-          // Default to next chapter number
           const maxNum = n.chapters.reduce((max, c) => Math.max(max, c.number), 0);
           setNumber(maxNum + 1);
         }
@@ -49,6 +90,7 @@ export default function AdminChapterEditPage({ slug, chapter }: { slug: string; 
     setError(null);
     if (!title.trim()) { setError("Chapter title is required"); return; }
     if (number < 1) { setError("Chapter number must be at least 1"); return; }
+    if (publishMode === "schedule" && !scheduleDate) { setError("Schedule date is required"); return; }
     setSaving(true);
     try {
       const paragraphs = content.split(/\n\n+/).map((p) => p.trim()).filter(Boolean);
@@ -58,6 +100,8 @@ export default function AdminChapterEditPage({ slug, chapter }: { slug: string; 
         content: paragraphs,
         publishedAt,
         status,
+        published: publishMode === "now",
+        publishAt: publishMode === "schedule" ? toIsoFromJakarta(scheduleDate) : null,
       };
       if (isEdit && chapter !== undefined) {
         await updateChapter(slug, chapter, input);
@@ -154,6 +198,57 @@ export default function AdminChapterEditPage({ slug, chapter }: { slug: string; 
                 </button>
               </div>
             </div>
+          </div>
+
+          {/* Publishing schedule */}
+          <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+            <label className="mb-3 block text-sm font-medium text-slate-700 dark:text-slate-300">Publishing</label>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPublishMode("now")}
+                className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+                  publishMode === "now" ? "bg-amber-500 text-white" : "border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+                }`}
+              >
+                <Zap size={16} /> Publish Now
+              </button>
+              <button
+                onClick={() => setPublishMode("schedule")}
+                className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+                  publishMode === "schedule" ? "bg-amber-500 text-white" : "border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+                }`}
+              >
+                <Calendar size={16} /> Schedule Publish
+              </button>
+            </div>
+            {publishMode === "schedule" && (
+              <div className="mt-3 space-y-2">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">Date & Time (Asia/Jakarta)</label>
+                    <input
+                      type="datetime-local"
+                      value={scheduleDate}
+                      onChange={(e) => setScheduleDate(e.target.value)}
+                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-amber-400 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <div className="flex items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-2.5 text-xs text-slate-500 dark:bg-slate-700 dark:text-slate-400">
+                      <Clock size={14} /> Timezone: WIB (UTC+7)
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-400">
+                  The chapter will be hidden from readers until the scheduled time, then automatically published.
+                </p>
+              </div>
+            )}
+            {publishMode === "now" && (
+              <p className="mt-2 text-xs text-slate-400">
+                The chapter will be visible to readers immediately upon saving.
+              </p>
+            )}
           </div>
 
           <div>
