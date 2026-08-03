@@ -6,31 +6,29 @@ import AdminLayout from "../../components/admin/AdminLayout";
 
 type PublishMode = "now" | "schedule";
 
+function jakartaDateTimeParts(d: Date): string {
+  const fmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hour12: false,
+  });
+  const map: Record<string, string> = {};
+  for (const p of fmt.formatToParts(d)) map[p.type] = p.value;
+  return `${map.year}-${map.month}-${map.day}T${map.hour}:${map.minute}`;
+}
+
 function jakartaNow(): string {
-  // Get current time in Asia/Jakarta timezone, formatted for datetime-local input
-  const now = new Date();
-  const jakarta = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Jakarta" }));
-  const offset = jakarta.getTimezoneOffset() * 60000;
-  const local = new Date(jakarta.getTime() - offset);
-  return local.toISOString().slice(0, 16);
+  return jakartaDateTimeParts(new Date());
 }
 
 function toIsoFromJakarta(localStr: string): string {
-  // Interpret the input as Asia/Jakarta time and convert to UTC ISO
-  const jakartaOffsetMinutes = -7 * 60; // WIB is UTC+7
-  const local = new Date(localStr);
-  const utc = new Date(local.getTime() - jakartaOffsetMinutes * 60000);
-  return utc.toISOString();
+  return new Date(localStr + "+07:00").toISOString();
 }
 
 function formatJakartaFromIso(isoStr: string | null): string {
   if (!isoStr) return "";
   try {
-    const d = new Date(isoStr);
-    const jakarta = new Date(d.toLocaleString("en-US", { timeZone: "Asia/Jakarta" }));
-    const offset = jakarta.getTimezoneOffset() * 60000;
-    const local = new Date(jakarta.getTime() - offset);
-    return local.toISOString().slice(0, 16);
+    return jakartaDateTimeParts(new Date(isoStr));
   } catch {
     return "";
   }
@@ -100,8 +98,8 @@ export default function AdminChapterEditPage({ slug, chapter }: { slug: string; 
         content: paragraphs,
         publishedAt,
         status,
-        published: publishMode === "now",
-        publishAt: publishMode === "schedule" ? toIsoFromJakarta(scheduleDate) : null,
+        published: status === "draft" ? false : publishMode === "now",
+        publishAt: status === "draft" ? null : publishMode === "schedule" ? toIsoFromJakarta(scheduleDate) : null,
       };
       if (isEdit && chapter !== undefined) {
         await updateChapter(slug, chapter, input);

@@ -31,19 +31,23 @@ import AdminLayout from "../../components/admin/AdminLayout";
 
 type ImportResult = { title: string; paragraphs: number; status: "ok" | "error"; message?: string };
 
+function jakartaDateTimeParts(d: Date): string {
+  const fmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hour12: false,
+  });
+  const map: Record<string, string> = {};
+  for (const p of fmt.formatToParts(d)) map[p.type] = p.value;
+  return `${map.year}-${map.month}-${map.day}T${map.hour}:${map.minute}`;
+}
+
 function jakartaNow(): string {
-  const now = new Date();
-  const jakarta = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Jakarta" }));
-  const offset = jakarta.getTimezoneOffset() * 60000;
-  const local = new Date(jakarta.getTime() - offset);
-  return local.toISOString().slice(0, 16);
+  return jakartaDateTimeParts(new Date());
 }
 
 function toIsoFromJakarta(localStr: string): string {
-  const jakartaOffsetMinutes = -7 * 60;
-  const local = new Date(localStr);
-  const utc = new Date(local.getTime() - jakartaOffsetMinutes * 60000);
-  return utc.toISOString();
+  return new Date(localStr + "+07:00").toISOString();
 }
 
 function computePublishAt(index: number, mode: ScheduleMode, startDate: string, intervalHours: number): string | null {
@@ -175,8 +179,8 @@ export default function AdminImportPage() {
 
       const content = paragraphsToContent(parsed.paragraphs);
       const title = chapterTitle.trim() || selectedFile?.name.replace(/\.docx$/i, "") || `Chapter ${chapterNumber}`;
-      const isPublished = scheduleMode === "immediate";
-      const publishAt = scheduleMode !== "immediate" ? toIsoFromJakarta(scheduleStart) : null;
+      const isPublished = chapterStatus === "draft" ? false : scheduleMode === "immediate";
+      const publishAt = chapterStatus === "draft" ? null : scheduleMode !== "immediate" ? toIsoFromJakarta(scheduleStart) : null;
 
       if (existing) {
         const { supabase } = await import("../../lib/supabase");
@@ -298,8 +302,8 @@ export default function AdminImportPage() {
 
       const content = paragraphsToContent(txtParsed.paragraphs);
       const title = chapterTitle.trim() || selectedFile?.name.replace(/\.txt$/i, "") || `Chapter ${chapterNumber}`;
-      const isPublished = scheduleMode === "immediate";
-      const publishAt = scheduleMode !== "immediate" ? toIsoFromJakarta(scheduleStart) : null;
+      const isPublished = chapterStatus === "draft" ? false : scheduleMode === "immediate";
+      const publishAt = chapterStatus === "draft" ? null : scheduleMode !== "immediate" ? toIsoFromJakarta(scheduleStart) : null;
 
       if (existing) {
         const { supabase } = await import("../../lib/supabase");
@@ -445,8 +449,8 @@ export default function AdminImportPage() {
       for (let idx = 0; idx < valid.length; idx++) {
         const item = valid[idx];
         try {
-          const isPublished = scheduleMode === "immediate";
-          const publishAt = computePublishAt(idx, scheduleMode, scheduleStart, intervalHours);
+          const isPublished = chapterStatus === "draft" ? false : scheduleMode === "immediate";
+          const publishAt = chapterStatus === "draft" ? null : computePublishAt(idx, scheduleMode, scheduleStart, intervalHours);
           await createChapter(selectedNovel, {
             number: item.number,
             title: item.title || `Chapter ${item.number}`,
@@ -510,8 +514,8 @@ export default function AdminImportPage() {
           const title = result.detectedTitle
             || f.name.replace(/\.docx$/i, "").replace(/^[0-9]+[_\-\s]*/, "");
 
-          const isPublished = scheduleMode === "immediate";
-          const publishAt = computePublishAt(chapterIdx, scheduleMode, scheduleStart, intervalHours);
+          const isPublished = chapterStatus === "draft" ? false : scheduleMode === "immediate";
+          const publishAt = chapterStatus === "draft" ? null : computePublishAt(chapterIdx, scheduleMode, scheduleStart, intervalHours);
           await createChapter(selectedNovel, {
             number: num,
             title,
