@@ -23,7 +23,7 @@ export default function SearchPage({ initialQuery, initialGenre, initialStatus }
     path: seoPath,
   });
   const [page, setPage] = useState(1);
-  const [sort, setSort] = useState<"popular" | "rating" | "latest">("popular");
+  const [sort, setSort] = useState<"popular" | "latest">("popular");
   const [showFilters, setShowFilters] = useState(false);
   const [results, setResults] = useState<Novel[]>([]);
   const [total, setTotal] = useState(0);
@@ -124,11 +124,10 @@ export default function SearchPage({ initialQuery, initialGenre, initialStatus }
         <div className="flex gap-2">
           <select
             value={sort}
-            onChange={(e) => setSort(e.target.value as any)}
+            onChange={(e) => setSort(e.target.value as "popular" | "latest")}
             className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
           >
             <option value="popular">Most Popular</option>
-            <option value="rating">Top Rated</option>
             <option value="latest">Latest</option>
           </select>
           <button

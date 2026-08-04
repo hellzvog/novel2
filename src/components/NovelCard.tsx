@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Star, Eye, BookOpen } from "lucide-react";
+import { Eye, BookOpen } from "lucide-react";
 import type { Novel } from "../lib/api";
 import { formatViews, latestUpdateLabel } from "../lib/api";
 import { useRouter } from "../lib/router";
@@ -30,10 +30,6 @@ function NovelCardImpl({ novel }: { novel: Novel }) {
         </h3>
         <p className="text-xs text-slate-500 dark:text-slate-400">by {novel.author}</p>
         <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-1.5 text-[11px] text-slate-500 dark:text-slate-400">
-          <span className="flex items-center gap-1">
-            <Star size={12} className="fill-amber-400 text-amber-400" />
-            {novel.rating.toFixed(1)}
-          </span>
           <span className="flex items-center gap-1">
             <Eye size={12} />
             {formatViews(novel.views)}

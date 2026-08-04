@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BookOpen, Eye, Play, Star, ChevronDown, ChevronUp, Loader2, BookX, Heart, History, Clock } from "lucide-react";
+import { BookOpen, Eye, Play, ChevronDown, ChevronUp, Loader2, BookX, Heart, History, Clock } from "lucide-react";
 import { getNovel, relatedNovels, formatViews, type Novel } from "../lib/api";
 import { useRouter } from "../lib/router";
 import Cover from "../components/Cover";
@@ -120,11 +120,6 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
             <h1 className="font-serif text-2xl font-black leading-tight text-slate-900 dark:text-white md:text-3xl">{novel.title}</h1>
             <p className="text-sm text-slate-500 dark:text-slate-400">by <span className="font-medium text-slate-700 dark:text-slate-300">{novel.author}</span></p>
             <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
-              <span className="flex items-center gap-1.5">
-                <Star size={16} className="fill-amber-400 text-amber-400" />
-                <span className="font-bold text-slate-900 dark:text-white">{novel.rating.toFixed(1)}</span>
-                <span className="text-slate-400">rating</span>
-              </span>
               <span className="flex items-center gap-1.5">
                 <Eye size={16} className="text-slate-400" />
                 <span className="font-bold text-slate-900 dark:text-white">{formatViews(novel.views)}</span>
