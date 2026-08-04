@@ -18,6 +18,8 @@ export default function AdminNovelEditPage({ slug }: { slug?: string }) {
   const [synopsis, setSynopsis] = useState("");
   const [coverHue, setCoverHue] = useState(0);
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [featured, setFeatured] = useState(false);
+  const [popular, setPopular] = useState(false);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
@@ -44,6 +46,8 @@ export default function AdminNovelEditPage({ slug }: { slug?: string }) {
             setSynopsis(novel.synopsis);
             setCoverHue(novel.coverHue);
             setCoverUrl(novel.coverUrl);
+            setFeatured(novel.featured);
+            setPopular(novel.popular);
             setSelectedGenres(novel.genres);
             setSelectedTags(novel.tags);
           }
@@ -103,6 +107,8 @@ export default function AdminNovelEditPage({ slug }: { slug?: string }) {
         coverUrl,
         genres: selectedGenres,
         tags: selectedTags,
+        featured,
+        popular,
       };
       if (isEdit && slug) {
         await updateNovel(slug, input);
@@ -211,6 +217,37 @@ export default function AdminNovelEditPage({ slug }: { slug?: string }) {
                   ))}
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Genres */}
+          <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
+            <h2 className="mb-3 font-serif text-base font-bold text-slate-900 dark:text-white">Homepage Placement</h2>
+            <div className="space-y-3">
+              <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 p-3 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-700">
+                <input
+                  type="checkbox"
+                  checked={featured}
+                  onChange={(e) => setFeatured(e.target.checked)}
+                  className="h-5 w-5 rounded accent-amber-500"
+                />
+                <div>
+                  <span className="block text-sm font-semibold text-slate-900 dark:text-white">Featured Novel</span>
+                  <span className="block text-xs text-slate-500 dark:text-slate-400">Show in the homepage Hero Banner. Only the 6 most recently featured novels appear.</span>
+                </div>
+              </label>
+              <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 p-3 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-700">
+                <input
+                  type="checkbox"
+                  checked={popular}
+                  onChange={(e) => setPopular(e.target.checked)}
+                  className="h-5 w-5 rounded accent-amber-500"
+                />
+                <div>
+                  <span className="block text-sm font-semibold text-slate-900 dark:text-white">Popular Novel</span>
+                  <span className="block text-xs text-slate-500 dark:text-slate-400">Show in the homepage Popular Novels section. Newest selections appear first.</span>
+                </div>
+              </label>
             </div>
           </div>
 

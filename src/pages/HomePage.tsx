@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { ArrowRight, Clock, Flame, TrendingUp, Loader2, AlertCircle, ChevronRight } from "lucide-react";
-import { listNovels, getGenres, type Novel, formatViews, latestUpdateLabel } from "../lib/api";
+import { useEffect, useState, useRef, useCallback } from "react";
+import { ArrowRight, Clock, Flame, TrendingUp, Loader2, AlertCircle, ChevronRight, ChevronLeft } from "lucide-react";
+import { listNovels, listFeaturedNovels, listPopularNovels, getGenres, type Novel, formatViews, latestUpdateLabel } from "../lib/api";
 import { useRouter } from "../lib/router";
 import NovelCard from "../components/NovelCard";
 import Section from "../components/Section";
@@ -13,6 +13,8 @@ import AdBanner from "../components/AdBanner";
 export default function HomePage() {
   const { navigate } = useRouter();
   const [novels, setNovels] = useState<Novel[]>([]);
+  const [featuredNovels, setFeaturedNovels] = useState<Novel[]>([]);
+  const [popularNovels, setPopularNovels] = useState<Novel[]>([]);
   const [genres, setGenres] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -30,9 +32,11 @@ export default function HomePage() {
     (async () => {
       try {
         setLoading(true);
-        const [n, g] = await Promise.all([listNovels(), getGenres()]);
+        const [n, f, p, g] = await Promise.all([listNovels(), listFeaturedNovels(6), listPopularNovels(12), getGenres()]);
         if (!active) return;
         setNovels(n);
+        setFeaturedNovels(f);
+        setPopularNovels(p);
         setGenres(g.map((x) => x.name));
         const stored = getReadingHistory();
         const byId = new Map(n.map((nv) => [nv.id, nv]));
@@ -80,52 +84,20 @@ export default function HomePage() {
     );
   }
 
-  const featured = [...novels].sort((a, b) => b.rating - a.rating).slice(0, 6);
   const latest = [...novels].sort((a, b) => {
     const al = a.chapters[a.chapters.length - 1]?.publishedAt ?? "";
     const bl = b.chapters[b.chapters.length - 1]?.publishedAt ?? "";
     return bl.localeCompare(al);
   }).slice(0, 12);
-  const popular = [...novels].sort((a, b) => b.views - a.views).slice(0, 12);
   const completed = novels.filter((n) => n.status === "Completed").slice(0, 6);
   const ongoing = novels.filter((n) => n.status === "Ongoing").slice(0, 6);
-  const hero = featured[0];
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6">
-      {/* Hero */}
-      <div className="relative mb-12 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700">
-        <div className="grid md:grid-cols-2">
-          <div className="relative flex flex-col justify-center gap-4 p-8 md:p-12"
-            style={{ background: "linear-gradient(135deg, #1e3a8a, #0ea5e9)" }}>
-            <div className="absolute inset-0 opacity-20" style={{
-              backgroundImage: "radial-gradient(circle at 30% 20%, rgba(255,255,255,0.3) 0%, transparent 50%)",
-            }} />
-            <span className="relative w-fit rounded-full bg-amber-400 px-3 py-1 text-xs font-bold uppercase tracking-wider text-slate-900">
-              Featured
-            </span>
-            <h1 className="relative font-serif text-3xl font-black leading-tight text-white md:text-4xl">
-              {hero.title}
-            </h1>
-            <p className="relative text-sm text-white/80">by {hero.author}</p>
-            <p className="relative line-clamp-3 text-sm text-white/90">{hero.synopsis}</p>
-            <div className="relative flex flex-wrap gap-2">
-              {hero.genres.map((g) => (
-                <span key={g} className="rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">{g}</span>
-              ))}
-            </div>
-            <button
-              onClick={() => navigate({ name: "novel", slug: hero.slug })}
-              className="relative mt-2 flex w-fit items-center gap-2 rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-bold text-slate-900 transition-all hover:bg-amber-300 hover:shadow-lg"
-            >
-              Start Reading <ArrowRight size={16} />
-            </button>
-          </div>
-          <div className="hidden items-center justify-center bg-slate-100 p-12 md:flex dark:bg-slate-800">
-            <Cover title={hero.title} hue={hero.coverHue} coverUrl={hero.coverUrl} className="h-80 w-60 shadow-2xl" />
-          </div>
-        </div>
-      </div>
+      {/* Hero — only render if there are featured novels */}
+      {featuredNovels.length > 0 && (
+        <HeroSlider novels={featuredNovels} onNavigate={(slug) => navigate({ name: "novel", slug })} />
+      )}
 
       {/* Continue Reading */}
       {history.length > 0 && (
@@ -156,7 +128,7 @@ export default function HomePage() {
       {/* Featured carousel */}
       <Section title="Featured Novels" onMore={() => navigate({ name: "search" })}>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6">
-          {featured.map((n) => <NovelCard key={n.id} novel={n} />)}
+          {featuredNovels.map((n) => <NovelCard key={n.id} novel={n} />)}
         </div>
       </Section>
 
@@ -186,10 +158,10 @@ export default function HomePage() {
         </div>
       </Section>
 
-      {/* Popular */}
+      {/* Popular — from manually curated popular novels, fallback to views-based if empty */}
       <Section title="Popular Novels" onMore={() => navigate({ name: "search" })}>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
-          {popular.map((n) => <NovelCard key={n.id} novel={n} />)}
+          {(popularNovels.length > 0 ? popularNovels : [...novels].sort((a, b) => b.views - a.views).slice(0, 12)).map((n) => <NovelCard key={n.id} novel={n} />)}
         </div>
       </Section>
 
@@ -242,6 +214,110 @@ export default function HomePage() {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+function HeroSlider({ novels, onNavigate }: { novels: Novel[]; onNavigate: (slug: string) => void }) {
+  const [current, setCurrent] = useState(0);
+  const touchStartX = useRef<number | null>(null);
+
+  const next = useCallback(() => {
+    setCurrent((c) => (c + 1) % novels.length);
+  }, [novels.length]);
+
+  const prev = useCallback(() => {
+    setCurrent((c) => (c - 1 + novels.length) % novels.length);
+  }, [novels.length]);
+
+  const goTo = (index: number) => setCurrent(index);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const diff = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) prev();
+      else next();
+    }
+    touchStartX.current = null;
+  };
+
+  const hero = novels[current];
+
+  return (
+    <div
+      className="relative mb-12 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      <div className="grid md:grid-cols-2">
+        <div className="relative flex flex-col justify-center gap-4 p-6 md:p-10"
+          style={{ background: "linear-gradient(135deg, #1e3a8a, #0ea5e9)", minHeight: "220px" }}>
+          <div className="absolute inset-0 opacity-20" style={{
+            backgroundImage: "radial-gradient(circle at 30% 20%, rgba(255,255,255,0.3) 0%, transparent 50%)",
+          }} />
+          <span className="relative w-fit rounded-full bg-amber-400 px-3 py-1 text-xs font-bold uppercase tracking-wider text-slate-900">
+            Featured
+          </span>
+          <h1 className="relative font-serif text-3xl font-black leading-tight text-white md:text-4xl">
+            {hero.title}
+          </h1>
+          <p className="relative text-sm text-white/80">by {hero.author}</p>
+          <p className="relative line-clamp-2 text-sm text-white/90">{hero.synopsis}</p>
+          <div className="relative flex flex-wrap gap-2">
+            {hero.genres.map((g) => (
+              <span key={g} className="rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">{g}</span>
+            ))}
+          </div>
+          <button
+            onClick={() => onNavigate(hero.slug)}
+            className="relative mt-2 flex w-fit items-center gap-2 rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-bold text-slate-900 transition-all hover:bg-amber-300 hover:shadow-lg"
+          >
+            Start Reading <ArrowRight size={16} />
+          </button>
+        </div>
+        <div className="hidden items-center justify-center bg-slate-100 p-10 md:flex dark:bg-slate-800">
+          <Cover title={hero.title} hue={hero.coverHue} coverUrl={hero.coverUrl} className="h-48 w-36 shadow-2xl" />
+        </div>
+      </div>
+
+      {/* Navigation arrows — only show if more than 1 featured novel */}
+      {novels.length > 1 && (
+        <>
+          <button
+            onClick={prev}
+            className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/30 p-2 text-white backdrop-blur-sm transition-colors hover:bg-black/50"
+            aria-label="Previous"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <button
+            onClick={next}
+            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/30 p-2 text-white backdrop-blur-sm transition-colors hover:bg-black/50"
+            aria-label="Next"
+          >
+            <ChevronRight size={20} />
+          </button>
+
+          {/* Indicator dots */}
+          <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-2">
+            {novels.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => goTo(i)}
+                className={`h-2 rounded-full transition-all ${
+                  i === current ? "w-6 bg-amber-400" : "w-2 bg-white/50 hover:bg-white/70"
+                }`}
+                aria-label={`Go to slide ${i + 1}`}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

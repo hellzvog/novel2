@@ -28,6 +28,10 @@ export interface Novel {
   coverHue: number;
   coverUrl: string | null;
   chapters: Chapter[];
+  featured: boolean;
+  featuredAt: string | null;
+  popular: boolean;
+  popularAt: string | null;
 }
 
 export interface Genre {
@@ -52,6 +56,8 @@ export interface NovelInput {
   coverUrl?: string | null;
   genres: string[];
   tags: string[];
+  featured?: boolean;
+  popular?: boolean;
 }
 
 export interface ChapterInput {
@@ -63,6 +69,8 @@ export interface ChapterInput {
   published?: boolean;
   publishAt?: string | null;
 }
+
+function nowIso(): string { return new Date().toISOString(); }
 
 function slugify(text: string): string {
   return text
@@ -83,6 +91,10 @@ interface NovelRow {
   synopsis: string;
   cover_hue: number;
   cover_url: string | null;
+  featured: boolean;
+  featured_at: string | null;
+  popular: boolean;
+  popular_at: string | null;
   novel_genres: { genre: { name: string } }[];
   novel_tags: { tag: { name: string } }[];
 }
@@ -114,6 +126,10 @@ function mapNovel(row: NovelRow, chapters: Chapter[] = []): Novel {
     coverHue: row.cover_hue,
     coverUrl: row.cover_url ?? null,
     chapters,
+    featured: row.featured ?? false,
+    featuredAt: row.featured_at ?? null,
+    popular: row.popular ?? false,
+    popularAt: row.popular_at ?? null,
   };
 }
 
@@ -138,6 +154,7 @@ function mapChapter(row: ChapterRow): Chapter {
 
 const NOVEL_SELECT = `
   id, slug, title, alt_title, author, status, rating, views, synopsis, cover_hue, cover_url,
+  featured, featured_at, popular, popular_at,
   novel_genres ( genre:genres ( name ) ),
   novel_tags ( tag:tags ( name ) )
 `;
@@ -184,6 +201,30 @@ export async function listNovels(): Promise<Novel[]> {
     .from("novels")
     .select(NOVEL_SELECT)
     .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map((n) => mapNovel(n as unknown as NovelRow));
+}
+
+export async function listFeaturedNovels(limit = 6): Promise<Novel[]> {
+  await autoPublishChapters();
+  const { data, error } = await supabase
+    .from("novels")
+    .select(NOVEL_SELECT)
+    .eq("featured", true)
+    .order("featured_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []).map((n) => mapNovel(n as unknown as NovelRow));
+}
+
+export async function listPopularNovels(limit = 12): Promise<Novel[]> {
+  await autoPublishChapters();
+  const { data, error } = await supabase
+    .from("novels")
+    .select(NOVEL_SELECT)
+    .eq("popular", true)
+    .order("popular_at", { ascending: false })
+    .limit(limit);
   if (error) throw error;
   return (data ?? []).map((n) => mapNovel(n as unknown as NovelRow));
 }
@@ -298,6 +339,10 @@ export async function createNovel(input: NovelInput): Promise<Novel> {
       synopsis: input.synopsis,
       cover_hue: input.coverHue,
       cover_url: input.coverUrl ?? null,
+      featured: input.featured ?? false,
+      featured_at: input.featured ? nowIso() : null,
+      popular: input.popular ?? false,
+      popular_at: input.popular ? nowIso() : null,
     })
     .select(NOVEL_SELECT)
     .single();
@@ -337,6 +382,14 @@ export async function updateNovel(slug: string, updates: Partial<NovelInput>): P
   if (updates.synopsis !== undefined) updateData.synopsis = updates.synopsis;
   if (updates.coverHue !== undefined) updateData.cover_hue = updates.coverHue;
   if (updates.coverUrl !== undefined) updateData.cover_url = updates.coverUrl;
+  if (updates.featured !== undefined) {
+    updateData.featured = updates.featured;
+    updateData.featured_at = updates.featured ? nowIso() : null;
+  }
+  if (updates.popular !== undefined) {
+    updateData.popular = updates.popular;
+    updateData.popular_at = updates.popular ? nowIso() : null;
+  }
 
   if (Object.keys(updateData).length > 0) {
     const { error } = await supabase.from("novels").update(updateData).eq("slug", slug);
