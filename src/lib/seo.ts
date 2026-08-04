@@ -7,7 +7,7 @@ export const SITE_DESCRIPTION =
 
 /**
  * Returns the configured site URL, falling back to the current origin.
- * Set VITE_SITE_URL in .env to the canonical public URL (e.g. https://example.com).
+ * Set VITE_SITE_URL in .env to the canonical public URL (e.g. https://addnovel.com).
  */
 export function getSiteUrl(): string {
   const envUrl = import.meta.env.VITE_SITE_URL as string | undefined;
@@ -19,15 +19,15 @@ export function getSiteUrl(): string {
 /**
  * Builds a clean public URL for a given path.
  * @param path - path starting with "/" (e.g. "/novel/slug")
- * @returns full URL like "https://example.com/novel/slug"
+ * @returns full URL like "https://addnovel.com/novel/slug"
  */
 export function buildUrl(path: string): string {
   const base = getSiteUrl();
   return `${base}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
-/** Default Open Graph image (1200x630). */
-export const DEFAULT_OG_IMAGE = "/og-default.svg";
+/** Default Open Graph image (1200x630 PNG). */
+export const DEFAULT_OG_IMAGE = "/og-default.png";
 
 type RobotsMode = "index" | "noindex";
 

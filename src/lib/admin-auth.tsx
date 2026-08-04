@@ -16,7 +16,7 @@ interface AdminAuthValue {
 
 const AdminAuthContext = createContext<AdminAuthValue | null>(null);
 
-const TOKEN_KEY = "lumen_admin_token";
+const TOKEN_KEY = "addnovel_admin_token";
 
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null);

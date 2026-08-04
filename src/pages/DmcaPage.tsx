@@ -24,7 +24,7 @@ export default function DmcaPage() {
       <h2>Submitting a Takedown Request</h2>
       <p>
         To file a DMCA notice, please send an email to{" "}
-        <a href="mailto:dmca@addnovel.example">dmca@addnovel.example</a> containing the following
+        <a href="mailto:dmca@addnovel.com">dmca@addnovel.com</a> containing the following
         information:
       </p>
       <ul>
@@ -45,7 +45,7 @@ export default function DmcaPage() {
       <h2>Counter-Notification</h2>
       <p>
         If you believe your content was removed in error, you may submit a counter-notification to{" "}
-        <a href="mailto:dmca@addnovel.example">dmca@addnovel.example</a> that includes:
+        <a href="mailto:dmca@addnovel.com">dmca@addnovel.com</a> that includes:
       </p>
       <ul>
         <li>Your physical or electronic signature.</li>
@@ -64,7 +64,7 @@ export default function DmcaPage() {
       <h2>Contact</h2>
       <p>
         For any copyright-related questions, please contact us at{" "}
-        <a href="mailto:copyright@addnovel.example">copyright@addnovel.example</a>.
+        <a href="mailto:copyright@addnovel.com">copyright@addnovel.com</a>.
       </p>
     </LegalPage>
   );

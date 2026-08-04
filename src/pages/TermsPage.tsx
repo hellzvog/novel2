@@ -74,7 +74,7 @@ export default function TermsPage() {
       <h2>Contact</h2>
       <p>
         Questions about these Terms can be sent to{" "}
-        <a href="mailto:hello@addnovel.example">hello@addnovel.example</a>.
+        <a href="mailto:hello@addnovel.com">hello@addnovel.com</a>.
       </p>
     </LegalPage>
   );

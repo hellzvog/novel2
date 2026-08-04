@@ -95,7 +95,7 @@ export default function ChapterReaderPage({ slug, chapter }: { slug: string; cha
   // Restore scroll position.
   useEffect(() => {
     if (!novel || !currentChapter || loading) return;
-    const saved = localStorage.getItem(`lumen-progress-${novel.id}-${currentChapter.number}`);
+    const saved = localStorage.getItem(`addnovel-progress-${novel.id}-${currentChapter.number}`);
     if (saved) {
       const y = Number(saved);
       if (y > 0) window.scrollTo(0, y);

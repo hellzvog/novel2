@@ -115,7 +115,7 @@ export default function PrivacyPage() {
       <h2>Contact Us</h2>
       <p>
         If you have questions about this Privacy Policy, please email{" "}
-        <a href="mailto:privacy@addnovel.example">privacy@addnovel.example</a>.
+        <a href="mailto:privacy@addnovel.com">privacy@addnovel.com</a>.
       </p>
     </LegalPage>
   );

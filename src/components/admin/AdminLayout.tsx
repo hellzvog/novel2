@@ -43,7 +43,7 @@ export default function AdminLayout({ children, activeKey }: { children: ReactNo
     <div className="flex h-full flex-col">
       <div className="flex h-16 items-center gap-2 border-b border-slate-700 px-5">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500 font-serif text-lg font-black text-white">L</div>
-        <span className="font-serif text-lg font-bold text-white">LumenAdmin</span>
+        <span className="font-serif text-lg font-bold text-white">AddNovel Admin</span>
       </div>
       <nav className="flex-1 space-y-1 p-3">
         {NAV.map((item) => (

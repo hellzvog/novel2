@@ -6,25 +6,25 @@ export default function ContactPage() {
     {
       icon: Mail,
       title: "General Inquiries",
-      email: "hello@addnovel.example",
+      email: "hello@addnovel.com",
       desc: "Questions, feedback, or suggestions about the platform or any novel.",
     },
     {
       icon: Briefcase,
       title: "Business Inquiries",
-      email: "business@addnovel.example",
+      email: "business@addnovel.com",
       desc: "Partnerships, advertising, or other commercial opportunities.",
     },
     {
       icon: ShieldAlert,
       title: "Copyright Requests",
-      email: "copyright@addnovel.example",
+      email: "copyright@addnovel.com",
       desc: "Permission requests or questions about copyrighted material.",
     },
     {
       icon: FileWarning,
       title: "DMCA / Takedown Requests",
-      email: "dmca@addnovel.example",
+      email: "dmca@addnovel.com",
       desc: "Formal takedown notices under the DMCA. Please include the details listed on our DMCA page.",
     },
   ];

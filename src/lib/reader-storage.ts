@@ -29,10 +29,10 @@ export interface ReaderSettings {
   autoScrollSpeed: number;
 }
 
-const HISTORY_KEY = "lumen-reading-history";
-const FAVORITES_KEY = "lumen-favorites";
-const PROGRESS_KEY = "lumen-reading-progress";
-const SETTINGS_KEY = "lumen-reader-settings";
+const HISTORY_KEY = "addnovel-reading-history";
+const FAVORITES_KEY = "addnovel-favorites";
+const PROGRESS_KEY = "addnovel-reading-progress";
+const SETTINGS_KEY = "addnovel-reader-settings";
 
 const DEFAULT_SETTINGS: ReaderSettings = {
   fontSize: 18,
