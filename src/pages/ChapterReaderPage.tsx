@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Loader2, FileX2, Settings, X } from "lucide-react";
-import { getChapter, incrementViews, type Novel, type Chapter } from "../lib/api";
+import { getChapter, incrementViews, decodeEntities, type Novel, type Chapter } from "../lib/api";
 import { useRouter } from "../lib/router";
 import { useJsonLd, buildChapterJsonLd, buildBreadcrumbJsonLd } from "../lib/jsonld";
 import { useSeo } from "../lib/seo";
@@ -148,7 +148,7 @@ export default function ChapterReaderPage({ slug, chapter }: { slug: string; cha
       <nav className="mb-4 flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
         <button onClick={() => navigate({ name: "home" })} className="hover:text-amber-600 dark:hover:text-amber-400">Home</button>
         <span>/</span>
-        <button onClick={() => navigate({ name: "novel", slug })} className="hover:text-amber-600 dark:hover:text-amber-400">{novel.title}</button>
+        <button onClick={() => navigate({ name: "novel", slug })} className="hover:text-amber-600 dark:hover:text-amber-400">{decodeEntities(novel.title)}</button>
         <span>/</span>
         <span className="text-slate-700 dark:text-slate-300">Chapter {currentChapter.number}</span>
       </nav>
@@ -159,10 +159,10 @@ export default function ChapterReaderPage({ slug, chapter }: { slug: string; cha
             onClick={() => navigate({ name: "novel", slug })}
             className="text-sm text-slate-500 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-400"
           >
-            {novel.title}
+            {decodeEntities(novel.title)}
           </button>
           <h1 className="mt-1 font-serif text-2xl font-bold text-slate-900 dark:text-white sm:text-3xl">
-            {currentChapter.title}
+            {decodeEntities(currentChapter.title)}
           </h1>
           <p className="mt-1 text-sm text-slate-400">Chapter {currentChapter.number}</p>
         </div>
@@ -233,7 +233,7 @@ export default function ChapterReaderPage({ slug, chapter }: { slug: string; cha
           <div className="space-y-4 text-slate-700 dark:text-slate-200">
             {currentChapter.content.map((paragraph, i) => (
               <div key={i}>
-                <p>{paragraph}</p>
+                <p style={{ whiteSpace: "pre-line" }}>{decodeEntities(paragraph)}</p>
                 {adPlan && adPlan.insertAfter.includes(i) && (
                   <AdBanner placement="reader" format="in-article" className="my-8" />
                 )}

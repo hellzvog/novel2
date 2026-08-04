@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { Eye, BookOpen } from "lucide-react";
 import type { Novel } from "../lib/api";
-import { formatViews, latestUpdateLabel } from "../lib/api";
+import { formatViews, latestUpdateLabel, decodeEntities } from "../lib/api";
 import { useRouter } from "../lib/router";
 import Cover from "./Cover";
 
@@ -26,7 +26,7 @@ function NovelCardImpl({ novel }: { novel: Novel }) {
       </div>
       <div className="flex flex-1 flex-col gap-1.5 p-3">
         <h3 className="line-clamp-2 font-serif text-sm font-bold text-slate-900 group-hover:text-amber-600 dark:text-slate-100 dark:group-hover:text-amber-400">
-          {novel.title}
+          {decodeEntities(novel.title)}
         </h3>
         <p className="text-xs text-slate-500 dark:text-slate-400">by {novel.author}</p>
         <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-1.5 text-[11px] text-slate-500 dark:text-slate-400">

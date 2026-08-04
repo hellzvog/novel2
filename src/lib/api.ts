@@ -72,11 +72,40 @@ export interface ChapterInput {
 
 function nowIso(): string { return new Date().toISOString(); }
 
-function slugify(text: string): string {
+export function slugify(text: string): string {
   return text
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+const ENTITY_MAP: Record<string, string> = {
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  quot: '"',
+  apos: "'",
+  rsquo: "\u2019",
+  lsquo: "\u2018",
+  ldquo: "\u201C",
+  rdquo: "\u201D",
+  ndash: "\u2013",
+  mdash: "\u2014",
+  hellip: "\u2026",
+  nbsp: "\u00A0",
+};
+
+export function decodeEntities(text: string): string {
+  if (!text) return "";
+  return text.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (match, body) => {
+    if (body[0] === "#") {
+      const isHex = body[1] === "x" || body[1] === "X";
+      const code = isHex ? parseInt(body.slice(2), 16) : parseInt(body.slice(1), 10);
+      if (isNaN(code)) return match;
+      return String.fromCodePoint(code);
+    }
+    return ENTITY_MAP[body] ?? match;
+  });
 }
 
 interface NovelRow {
@@ -170,6 +199,42 @@ export async function getGenres(): Promise<Genre[]> {
 export async function getGenreSlugs(): Promise<string[]> {
   const genres = await getGenres();
   return genres.map((g) => g.name);
+}
+
+export async function createGenre(name: string, slug?: string): Promise<Genre> {
+  const finalSlug = (slug ?? slugify(name)).trim();
+  if (!finalSlug) throw new Error("Slug is required");
+  const { data, error } = await supabase
+    .from("genres")
+    .insert({ name: name.trim(), slug: finalSlug })
+    .select("id, name, slug")
+    .single();
+  if (error) {
+    if (error.code === "23505") throw new Error("A genre with this slug already exists");
+    throw error;
+  }
+  return data;
+}
+
+export async function updateGenre(id: string, name: string, slug: string): Promise<Genre> {
+  const finalSlug = slug.trim();
+  if (!finalSlug) throw new Error("Slug is required");
+  const { data, error } = await supabase
+    .from("genres")
+    .update({ name: name.trim(), slug: finalSlug })
+    .eq("id", id)
+    .select("id, name, slug")
+    .single();
+  if (error) {
+    if (error.code === "23505") throw new Error("A genre with this slug already exists");
+    throw error;
+  }
+  return data;
+}
+
+export async function deleteGenre(id: string): Promise<void> {
+  const { error } = await supabase.from("genres").delete().eq("id", id);
+  if (error) throw error;
 }
 
 export async function getTags(): Promise<Tag[]> {

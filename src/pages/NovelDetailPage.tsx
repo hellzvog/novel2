@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { BookOpen, Eye, Play, ChevronDown, ChevronUp, Loader2, BookX, Heart, History, Clock } from "lucide-react";
-import { getNovel, relatedNovels, formatViews, type Novel } from "../lib/api";
+import { getNovel, relatedNovels, formatViews, decodeEntities, type Novel } from "../lib/api";
 import { useRouter } from "../lib/router";
 import Cover from "../components/Cover";
 import NovelCard from "../components/NovelCard";
@@ -97,7 +97,7 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
       <nav className="mb-6 flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
         <button onClick={() => navigate({ name: "home" })} className="hover:text-amber-600 dark:hover:text-amber-400">Home</button>
         <span>/</span>
-        <span className="text-slate-700 dark:text-slate-300">{novel.title}</span>
+        <span className="text-slate-700 dark:text-slate-300">{decodeEntities(novel.title)}</span>
       </nav>
 
       {/* Hero block */}
@@ -117,7 +117,7 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
                 <button key={g} onClick={() => navigate({ name: "search", genre: g })} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-amber-100 hover:text-amber-700 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600">{g}</button>
               ))}
             </div>
-            <h1 className="font-serif text-2xl font-black leading-tight text-slate-900 dark:text-white md:text-3xl">{novel.title}</h1>
+            <h1 className="font-serif text-2xl font-black leading-tight text-slate-900 dark:text-white md:text-3xl">{decodeEntities(novel.title)}</h1>
             <p className="text-sm text-slate-500 dark:text-slate-400">by <span className="font-medium text-slate-700 dark:text-slate-300">{novel.author}</span></p>
             <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
               <span className="flex items-center gap-1.5">
@@ -179,7 +179,7 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
         <h2 className="mb-3 flex items-center gap-2 font-serif text-lg font-bold text-slate-900 dark:text-white">
           <span className="h-5 w-1.5 rounded-full bg-amber-500" /> Synopsis
         </h2>
-        <p className="leading-relaxed text-slate-600 dark:text-slate-300">{novel.synopsis}</p>
+        <p className="leading-relaxed text-slate-600 dark:text-slate-300" style={{ whiteSpace: "pre-line" }}>{decodeEntities(novel.synopsis)}</p>
       </div>
 
       <AdBanner placement="novel" className="mt-6" />
@@ -201,7 +201,7 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
             >
               <span className="flex min-w-0 items-center gap-2">
                 <span className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-500 dark:bg-slate-700 dark:text-slate-300">{c.number}</span>
-                <span className="truncate text-sm text-slate-700 group-hover:text-amber-600 dark:text-slate-300 dark:group-hover:text-amber-400">{c.title}</span>
+                <span className="truncate text-sm text-slate-700 group-hover:text-amber-600 dark:text-slate-300 dark:group-hover:text-amber-400">{decodeEntities(c.title)}</span>
               </span>
               <span className="shrink-0 text-[10px] text-slate-400">{c.publishedAt}</span>
             </button>

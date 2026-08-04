@@ -24,6 +24,7 @@ const AdminNovelEditPage = lazy(() => import("./pages/admin/AdminNovelEditPage")
 const AdminChaptersPage = lazy(() => import("./pages/admin/AdminChaptersPage"));
 const AdminChapterEditPage = lazy(() => import("./pages/admin/AdminChapterEditPage"));
 const AdminImportPage = lazy(() => import("./pages/admin/AdminImportPage"));
+const AdminGenresPage = lazy(() => import("./pages/admin/AdminGenresPage"));
 import { Loader2 } from "lucide-react";
 
 function PageLoader() {
@@ -34,7 +35,7 @@ function PageLoader() {
   );
 }
 
-const ADMIN_ROUTES = new Set(["admin", "admin-novels", "admin-novel-edit", "admin-chapters", "admin-chapter-edit", "admin-import"]);
+const ADMIN_ROUTES = new Set(["admin", "admin-novels", "admin-novel-edit", "admin-chapters", "admin-chapter-edit", "admin-import", "admin-genres"]);
 
 function Pages() {
   const { route, navigate } = useRouter();
@@ -88,6 +89,7 @@ function Pages() {
         {route.name === "admin-chapters" && <AdminChaptersPage slug={route.slug} />}
         {route.name === "admin-chapter-edit" && <AdminChapterEditPage slug={route.slug} chapter={route.chapter} />}
         {route.name === "admin-import" && <AdminImportPage />}
+        {route.name === "admin-genres" && <AdminGenresPage />}
       </Suspense>
     );
   }

@@ -8,6 +8,7 @@ import {
   Menu,
   X,
   ExternalLink,
+  Tag,
 } from "lucide-react";
 import { useRouter } from "../../lib/router";
 import { useAdminAuth } from "../../lib/admin-auth";
@@ -23,6 +24,7 @@ const NAV: NavItem[] = [
   { label: "Dashboard", icon: <LayoutDashboard size={18} />, route: { name: "admin" }, match: ["admin"] },
   { label: "Novels", icon: <BookOpen size={18} />, route: { name: "admin-novels" }, match: ["admin-novels", "admin-novel-edit"] },
   { label: "Import", icon: <Upload size={18} />, route: { name: "admin-import" }, match: ["admin-import"] },
+  { label: "Genres", icon: <Tag size={18} />, route: { name: "admin-genres" }, match: ["admin-genres"] },
 ];
 
 export default function AdminLayout({ children, activeKey }: { children: ReactNode; activeKey: string }) {

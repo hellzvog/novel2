@@ -17,7 +17,8 @@ export type Route =
   | { name: "admin-novel-edit"; slug?: string }
   | { name: "admin-chapters"; slug: string }
   | { name: "admin-chapter-edit"; slug: string; chapter?: number }
-  | { name: "admin-import" };
+  | { name: "admin-import" }
+  | { name: "admin-genres" };
 
 interface RouterValue {
   route: Route;
@@ -92,6 +93,7 @@ function parseHash(hash: string): Route | null {
       return { name: "admin-chapters", slug: parts[2] };
     }
     if (parts[1] === "import") return { name: "admin-import" };
+    if (parts[1] === "genres") return { name: "admin-genres" };
     return { name: "admin" };
   }
   return null;
@@ -141,6 +143,7 @@ function parsePath(pathname: string, search: string): Route {
       return { name: "admin-chapters", slug: parts[2] };
     }
     if (parts[1] === "import") return { name: "admin-import" };
+    if (parts[1] === "genres") return { name: "admin-genres" };
     return { name: "admin" };
   }
   return { name: "home" };
@@ -188,6 +191,8 @@ function toPath(route: Route): string {
       return route.chapter ? `/admin/chapters/${route.slug}/edit/${route.chapter}` : `/admin/chapters/${route.slug}/new`;
     case "admin-import":
       return "/admin/import";
+    case "admin-genres":
+      return "/admin/genres";
   }
 }
 
