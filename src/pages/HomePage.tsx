@@ -255,19 +255,19 @@ function HeroSlider({ novels, onNavigate }: { novels: Novel[]; onNavigate: (slug
       onTouchEnd={handleTouchEnd}
     >
       <div className="grid md:grid-cols-2">
-        <div className="relative flex flex-col justify-center gap-4 p-6 md:p-10"
-          style={{ background: "linear-gradient(135deg, #1e3a8a, #0ea5e9)", minHeight: "220px" }}>
+        <div className="relative flex flex-col justify-center gap-3 p-6 md:p-10"
+          style={{ background: "linear-gradient(135deg, #1e3a8a, #0ea5e9)", height: "360px" }}>
           <div className="absolute inset-0 opacity-20" style={{
             backgroundImage: "radial-gradient(circle at 30% 20%, rgba(255,255,255,0.3) 0%, transparent 50%)",
           }} />
           <span className="relative w-fit rounded-full bg-amber-400 px-3 py-1 text-xs font-bold uppercase tracking-wider text-slate-900">
             Featured
           </span>
-          <h1 className="relative font-serif text-3xl font-black leading-tight text-white md:text-4xl">
+          <h1 className="relative line-clamp-2 font-serif text-3xl font-black leading-tight text-white md:text-4xl">
             {hero.title}
           </h1>
           <p className="relative text-sm text-white/80">by {hero.author}</p>
-          <p className="relative line-clamp-2 text-sm text-white/90">{hero.synopsis}</p>
+          <p className="relative line-clamp-3 text-sm text-white/90">{hero.synopsis}</p>
           <div className="relative flex flex-wrap gap-2">
             {hero.genres.map((g) => (
               <span key={g} className="rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">{g}</span>
@@ -281,7 +281,7 @@ function HeroSlider({ novels, onNavigate }: { novels: Novel[]; onNavigate: (slug
           </button>
         </div>
         <div className="hidden items-center justify-center bg-slate-100 p-10 md:flex dark:bg-slate-800">
-          <Cover title={hero.title} hue={hero.coverHue} coverUrl={hero.coverUrl} className="h-48 w-36 shadow-2xl" />
+          <Cover title={hero.title} hue={hero.coverHue} coverUrl={hero.coverUrl} className="h-[300px] w-[240px] shadow-2xl" />
         </div>
       </div>
 

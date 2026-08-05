@@ -180,6 +180,13 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
           <span className="h-5 w-1.5 rounded-full bg-amber-500" /> Synopsis
         </h2>
         <p className="leading-relaxed text-slate-600 dark:text-slate-300" style={{ whiteSpace: "pre-line" }}>{decodeEntities(novel.synopsis)}</p>
+        {novel.genres.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {novel.genres.map((g) => (
+              <button key={g} onClick={() => navigate({ name: "search", genre: g })} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-amber-100 hover:text-amber-700 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600">{g}</button>
+            ))}
+          </div>
+        )}
       </div>
 
       <AdBanner placement="novel" className="mt-6" />
@@ -197,13 +204,13 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
             <button
               key={c.id}
               onClick={() => navigate({ name: "reader", slug: novel.slug, chapter: c.number })}
-              className="group flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-amber-50 dark:hover:bg-slate-700"
+              className="group flex min-w-0 flex-col items-start gap-0.5 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-amber-50 dark:hover:bg-slate-700 sm:flex-row sm:items-center sm:justify-between sm:gap-2"
             >
               <span className="flex min-w-0 items-center gap-2">
                 <span className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-500 dark:bg-slate-700 dark:text-slate-300">{c.number}</span>
-                <span className="truncate text-sm text-slate-700 group-hover:text-amber-600 dark:text-slate-300 dark:group-hover:text-amber-400">{decodeEntities(c.title)}</span>
+                <span className="line-clamp-1 text-sm text-slate-700 group-hover:text-amber-600 dark:text-slate-300 dark:group-hover:text-amber-400">{decodeEntities(c.title)}</span>
               </span>
-              <span className="shrink-0 text-[10px] text-slate-400">{c.publishedAt}</span>
+              <span className="shrink-0 pl-7 text-[10px] text-slate-400 sm:pl-0">{c.publishedAt}</span>
             </button>
           ))}
         </div>
