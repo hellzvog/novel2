@@ -3,6 +3,7 @@ import { ArrowLeft, Save, Loader2, AlertCircle, Upload, X } from "lucide-react";
 import { getNovelAdmin, getGenres, getTags, createNovel, updateNovel, type Novel, type NovelStatus, type Genre, type Tag } from "../../lib/api";
 import { supabase } from "../../lib/supabase";
 import { useRouter } from "../../lib/router";
+import { optimizeCoverImage, optimizedExtension } from "../../lib/image-optimize";
 import AdminLayout from "../../components/admin/AdminLayout";
 
 const STATUSES: NovelStatus[] = ["Ongoing", "Completed", "Hiatus"];
@@ -64,9 +65,10 @@ export default function AdminNovelEditPage({ slug }: { slug?: string }) {
     setUploading(true);
     setError(null);
     try {
-      const ext = file.name.split(".").pop();
+      const optimized = await optimizeCoverImage(file);
+      const ext = optimizedExtension(optimized);
       const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("novel-covers").upload(path, file);
+      const { error: upErr } = await supabase.storage.from("novel-covers").upload(path, optimized, { contentType: optimized.type });
       if (upErr) throw upErr;
       const { data: urlData } = supabase.storage.from("novel-covers").getPublicUrl(path);
       setCoverUrl(urlData.publicUrl);
