@@ -61,19 +61,30 @@ export default function AdminNovelEditPage({ slug }: { slug?: string }) {
     })();
   }, [slug]);
 
+  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+  const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
   const handleUploadCover = async (file: File) => {
     setUploading(true);
     setError(null);
     try {
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        throw new Error("Unsupported file type. Please use JPEG, PNG, or WebP.");
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        throw new Error("File is too large. Maximum size is 5 MB.");
+      }
       const optimized = await optimizeCoverImage(file);
       const ext = optimizedExtension(optimized);
-      const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("novel-covers").upload(path, optimized, { contentType: optimized.type });
+      const path = `${crypto.randomUUID()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("novel-covers")
+        .upload(path, optimized, { contentType: optimized.type, upsert: false });
       if (upErr) throw upErr;
       const { data: urlData } = supabase.storage.from("novel-covers").getPublicUrl(path);
       setCoverUrl(urlData.publicUrl);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Upload failed");
+      setError(e instanceof Error ? e.message : "Upload failed. Please try again.");
     } finally {
       setUploading(false);
     }

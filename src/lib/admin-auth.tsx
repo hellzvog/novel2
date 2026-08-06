@@ -46,16 +46,22 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.rpc("admin_login", {
-      p_email: email,
-      p_password: password,
-    });
-    if (error) throw new Error(error.message);
+    let data: { token?: string; user?: { id: string; email: string }; error?: string } | null = null;
+    try {
+      const res = await supabase.rpc("admin_login", {
+        p_email: email,
+        p_password: password,
+      });
+      if (res.error) throw res.error;
+      data = res.data;
+    } catch {
+      throw new Error("Login failed. Please try again.");
+    }
     if (data?.error) throw new Error(data.error);
-    if (!data?.token) throw new Error("Login failed");
+    if (!data?.token) throw new Error("Login failed. Please try again.");
 
     localStorage.setItem(TOKEN_KEY, data.token);
-    setUser({ id: data.user.id, email: data.user.email });
+    setUser({ id: data.user!.id, email: data.user!.email });
   };
 
   const signOut = () => {

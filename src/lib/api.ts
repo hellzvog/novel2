@@ -201,53 +201,73 @@ export async function getGenreSlugs(): Promise<string[]> {
   return genres.map((g) => g.name);
 }
 
+function getAdminToken(): string {
+  const token = localStorage.getItem("addnovel_admin_token");
+  if (!token) throw new Error("Not authorized");
+  return token;
+}
+
+function sanitizeError(e: unknown): Error {
+  if (e instanceof Error && (e.message === "Not authorized" || e.message === "Invalid email or password." || e.message === "Too many failed attempts. Please try again later.")) {
+    return e;
+  }
+  return new Error("An unexpected error occurred. Please try again.");
+}
+
 export async function createGenre(name: string, slug?: string): Promise<Genre> {
   const finalSlug = (slug ?? slugify(name)).trim();
   if (!finalSlug) throw new Error("Slug is required");
-  const { data, error } = await supabase
-    .from("genres")
-    .insert({ name: name.trim(), slug: finalSlug })
-    .select("id, name, slug")
-    .single();
-  if (error) {
-    if (error.code === "23505") throw new Error("A genre with this slug already exists");
-    throw error;
+  try {
+    const token = getAdminToken();
+    const { data, error } = await supabase.rpc("admin_create_genre", {
+      p_token: token,
+      p_name: name.trim(),
+      p_slug: finalSlug,
+    });
+    if (error) throw error;
+    if (!data) throw new Error("Failed to create genre");
+    return { id: data.id, name: data.name, slug: data.slug };
+  } catch (e) {
+    throw sanitizeError(e);
   }
-  return data;
 }
 
 export async function updateGenre(id: string, name: string, slug: string): Promise<Genre> {
   const finalSlug = slug.trim();
   if (!finalSlug) throw new Error("Slug is required");
-  const { data, error } = await supabase
-    .from("genres")
-    .update({ name: name.trim(), slug: finalSlug })
-    .eq("id", id)
-    .select("id, name, slug")
-    .single();
-  if (error) {
-    if (error.code === "23505") throw new Error("A genre with this slug already exists");
-    throw error;
+  try {
+    const token = getAdminToken();
+    const { data, error } = await supabase.rpc("admin_update_genre", {
+      p_token: token,
+      p_id: id,
+      p_name: name.trim(),
+      p_slug: finalSlug,
+    });
+    if (error) throw error;
+    if (!data) throw new Error("Failed to update genre");
+    return { id: data.id, name: data.name, slug: data.slug };
+  } catch (e) {
+    throw sanitizeError(e);
   }
-  return data;
 }
 
 export async function deleteGenre(id: string): Promise<void> {
-  const { error } = await supabase.from("genres").delete().eq("id", id);
-  if (error) throw error;
+  try {
+    const token = getAdminToken();
+    const { error } = await supabase.rpc("admin_delete_genre", {
+      p_token: token,
+      p_id: id,
+    });
+    if (error) throw error;
+  } catch (e) {
+    throw sanitizeError(e);
+  }
 }
 
 export async function getTags(): Promise<Tag[]> {
   const { data, error } = await supabase.from("tags").select("id, name, slug").order("name");
-  if (error) throw error;
+  if (error) throw sanitizeError(error);
   return data ?? [];
-}
-
-export async function ensureTags(names: string[]): Promise<void> {
-  for (const name of names) {
-    const slug = slugify(name);
-    await supabase.from("tags").upsert({ name, slug }, { onConflict: "slug" });
-  }
 }
 
 // ---------- Novels ----------
@@ -392,110 +412,79 @@ export async function searchNovels(filters: NovelFilters): Promise<{ novels: Nov
 }
 
 export async function createNovel(input: NovelInput): Promise<Novel> {
-  const slug = slugify(input.title) + "-" + Math.random().toString(36).slice(2, 6);
-  const { data, error } = await supabase
-    .from("novels")
-    .insert({
-      slug,
-      title: input.title,
-      alt_title: input.altTitle ?? null,
-      author: input.author,
-      status: input.status,
-      synopsis: input.synopsis,
-      cover_hue: input.coverHue,
-      cover_url: input.coverUrl ?? null,
-      featured: input.featured ?? false,
-      featured_at: input.featured ? nowIso() : null,
-      popular: input.popular ?? false,
-      popular_at: input.popular ? nowIso() : null,
-    })
-    .select(NOVEL_SELECT)
-    .single();
-  if (error) throw error;
-
-  // Link genres
-  if (input.genres.length > 0) {
-    const { data: genreRows } = await supabase.from("genres").select("id").in("name", input.genres);
-    if (genreRows && genreRows.length > 0) {
-      const links = genreRows.map((g) => ({ novel_id: data.id, genre_id: g.id }));
-      await supabase.from("novel_genres").insert(links);
-    }
+  try {
+    const token = getAdminToken();
+    const { data, error } = await supabase.rpc("admin_create_novel", {
+      p_token: token,
+      p_data: {
+        title: input.title,
+        alt_title: input.altTitle ?? "",
+        author: input.author,
+        status: input.status,
+        synopsis: input.synopsis,
+        cover_hue: input.coverHue,
+        cover_url: input.coverUrl ?? "",
+        genres: input.genres,
+        tags: input.tags,
+        featured: input.featured ?? false,
+        popular: input.popular ?? false,
+      } as unknown as Record<string, unknown>,
+    });
+    if (error) throw error;
+    const novel = await getNovel(data.slug);
+    if (!novel) throw new Error("Failed to create novel");
+    return novel;
+  } catch (e) {
+    throw sanitizeError(e);
   }
-
-  // Link tags
-  if (input.tags.length > 0) {
-    await ensureTags(input.tags);
-    const { data: tagRows } = await supabase.from("tags").select("id").in("name", input.tags);
-    if (tagRows && tagRows.length > 0) {
-      const links = tagRows.map((t) => ({ novel_id: data.id, tag_id: t.id }));
-      await supabase.from("novel_tags").insert(links);
-    }
-  }
-
-  return mapNovel(data as unknown as NovelRow);
 }
 
 export async function updateNovel(slug: string, updates: Partial<NovelInput>): Promise<Novel> {
-  const existing = await getNovel(slug);
-  if (!existing) throw new Error("Novel not found");
+  try {
+    const token = getAdminToken();
+    const pData: Record<string, unknown> = {};
+    if (updates.title !== undefined) pData.title = updates.title;
+    if (updates.altTitle !== undefined) pData.alt_title = updates.altTitle || "";
+    if (updates.author !== undefined) pData.author = updates.author;
+    if (updates.status !== undefined) pData.status = updates.status;
+    if (updates.synopsis !== undefined) pData.synopsis = updates.synopsis;
+    if (updates.coverHue !== undefined) pData.cover_hue = updates.coverHue;
+    if (updates.coverUrl !== undefined) pData.cover_url = updates.coverUrl ?? "";
+    if (updates.featured !== undefined) pData.featured = updates.featured;
+    if (updates.popular !== undefined) pData.popular = updates.popular;
+    if (updates.genres !== undefined) pData.genres = updates.genres;
+    if (updates.tags !== undefined) pData.tags = updates.tags;
 
-  const updateData: Record<string, unknown> = {};
-  if (updates.title !== undefined) updateData.title = updates.title;
-  if (updates.altTitle !== undefined) updateData.alt_title = updates.altTitle || null;
-  if (updates.author !== undefined) updateData.author = updates.author;
-  if (updates.status !== undefined) updateData.status = updates.status;
-  if (updates.synopsis !== undefined) updateData.synopsis = updates.synopsis;
-  if (updates.coverHue !== undefined) updateData.cover_hue = updates.coverHue;
-  if (updates.coverUrl !== undefined) updateData.cover_url = updates.coverUrl;
-  if (updates.featured !== undefined) {
-    updateData.featured = updates.featured;
-    updateData.featured_at = updates.featured ? nowIso() : null;
-  }
-  if (updates.popular !== undefined) {
-    updateData.popular = updates.popular;
-    updateData.popular_at = updates.popular ? nowIso() : null;
-  }
-
-  if (Object.keys(updateData).length > 0) {
-    const { error } = await supabase.from("novels").update(updateData).eq("slug", slug);
+    const { error } = await supabase.rpc("admin_update_novel", {
+      p_token: token,
+      p_slug: slug,
+      p_data: pData as unknown as Record<string, unknown>,
+    });
     if (error) throw error;
+    return getNovel(slug) as Promise<Novel>;
+  } catch (e) {
+    throw sanitizeError(e);
   }
-
-  if (updates.genres !== undefined) {
-    await supabase.from("novel_genres").delete().eq("novel_id", existing.id);
-    if (updates.genres.length > 0) {
-      const { data: genreRows } = await supabase.from("genres").select("id").in("name", updates.genres);
-      if (genreRows && genreRows.length > 0) {
-        const links = genreRows.map((g) => ({ novel_id: existing.id, genre_id: g.id }));
-        await supabase.from("novel_genres").insert(links);
-      }
-    }
-  }
-
-  if (updates.tags !== undefined) {
-    await supabase.from("novel_tags").delete().eq("novel_id", existing.id);
-    if (updates.tags.length > 0) {
-      await ensureTags(updates.tags);
-      const { data: tagRows } = await supabase.from("tags").select("id").in("name", updates.tags);
-      if (tagRows && tagRows.length > 0) {
-        const links = tagRows.map((t) => ({ novel_id: existing.id, tag_id: t.id }));
-        await supabase.from("novel_tags").insert(links);
-      }
-    }
-  }
-
-  return getNovel(slug) as Promise<Novel>;
 }
 
 export async function deleteNovel(slug: string): Promise<void> {
-  const { error } = await supabase.from("novels").delete().eq("slug", slug);
-  if (error) throw error;
+  try {
+    const token = getAdminToken();
+    const { error } = await supabase.rpc("admin_delete_novel", {
+      p_token: token,
+      p_slug: slug,
+    });
+    if (error) throw error;
+  } catch (e) {
+    throw sanitizeError(e);
+  }
 }
 
 export async function incrementViews(slug: string): Promise<void> {
-  const { data } = await supabase.from("novels").select("views").eq("slug", slug).maybeSingle();
-  if (data) {
-    await supabase.from("novels").update({ views: data.views + 1 }).eq("slug", slug);
+  try {
+    await supabase.rpc("admin_increment_views", { p_slug: slug });
+  } catch {
+    // Views increment is best-effort; never expose errors to readers
   }
 }
 
@@ -545,53 +534,69 @@ export async function getChapterAdmin(novelSlug: string, chapterNumber: number):
 }
 
 export async function createChapter(novelSlug: string, input: ChapterInput): Promise<Chapter> {
-  const { data: novel } = await supabase.from("novels").select("id").eq("slug", novelSlug).maybeSingle();
-  if (!novel) throw new Error("Novel not found");
-  const { data, error } = await supabase
-    .from("chapters")
-    .insert({
-      novel_id: novel.id,
-      number: input.number,
-      title: input.title,
-      content: input.content,
-      published_at: input.publishedAt,
-      status: input.status,
-      published: input.published ?? false,
-      publish_at: input.publishAt ?? null,
-    })
-    .select(CHAPTER_SELECT)
-    .single();
-  if (error) throw error;
-  return mapChapter(data as ChapterRow);
+  try {
+    const token = getAdminToken();
+    const { error } = await supabase.rpc("admin_create_chapter", {
+      p_token: token,
+      p_novel_slug: novelSlug,
+      p_data: {
+        number: input.number,
+        title: input.title,
+        content: input.content,
+        published_at: input.publishedAt,
+        status: input.status,
+        published: input.published ?? false,
+        publish_at: input.publishAt ?? "",
+      } as unknown as Record<string, unknown>,
+    });
+    if (error) throw error;
+    const result = await getChapterAdmin(novelSlug, input.number);
+    if (!result) throw new Error("Failed to create chapter");
+    return result.chapter;
+  } catch (e) {
+    throw sanitizeError(e);
+  }
 }
 
 export async function updateChapter(novelSlug: string, chapterNumber: number, updates: Partial<ChapterInput>): Promise<Chapter> {
-  const { data: novel } = await supabase.from("novels").select("id").eq("slug", novelSlug).maybeSingle();
-  if (!novel) throw new Error("Novel not found");
-  const updateData: Record<string, unknown> = {};
-  if (updates.title !== undefined) updateData.title = updates.title;
-  if (updates.content !== undefined) updateData.content = updates.content;
-  if (updates.publishedAt !== undefined) updateData.published_at = updates.publishedAt;
-  if (updates.number !== undefined) updateData.number = updates.number;
-  if (updates.status !== undefined) updateData.status = updates.status;
-  if (updates.published !== undefined) updateData.published = updates.published;
-  if (updates.publishAt !== undefined) updateData.publish_at = updates.publishAt;
-  const { data, error } = await supabase
-    .from("chapters")
-    .update(updateData)
-    .eq("novel_id", novel.id)
-    .eq("number", chapterNumber)
-    .select(CHAPTER_SELECT)
-    .single();
-  if (error) throw error;
-  return mapChapter(data as ChapterRow);
+  try {
+    const token = getAdminToken();
+    const pData: Record<string, unknown> = {};
+    if (updates.title !== undefined) pData.title = updates.title;
+    if (updates.content !== undefined) pData.content = updates.content;
+    if (updates.publishedAt !== undefined) pData.published_at = updates.publishedAt;
+    if (updates.number !== undefined) pData.number = updates.number;
+    if (updates.status !== undefined) pData.status = updates.status;
+    if (updates.published !== undefined) pData.published = updates.published;
+    if (updates.publishAt !== undefined) pData.publish_at = updates.publishAt ?? "";
+
+    const { error } = await supabase.rpc("admin_update_chapter", {
+      p_token: token,
+      p_novel_slug: novelSlug,
+      p_chapter_number: chapterNumber,
+      p_data: pData as unknown as Record<string, unknown>,
+    });
+    if (error) throw error;
+    const result = await getChapterAdmin(novelSlug, updates.number ?? chapterNumber);
+    if (!result) throw new Error("Failed to update chapter");
+    return result.chapter;
+  } catch (e) {
+    throw sanitizeError(e);
+  }
 }
 
 export async function deleteChapter(novelSlug: string, chapterNumber: number): Promise<void> {
-  const { data: novel } = await supabase.from("novels").select("id").eq("slug", novelSlug).maybeSingle();
-  if (!novel) throw new Error("Novel not found");
-  const { error } = await supabase.from("chapters").delete().eq("novel_id", novel.id).eq("number", chapterNumber);
-  if (error) throw error;
+  try {
+    const token = getAdminToken();
+    const { error } = await supabase.rpc("admin_delete_chapter", {
+      p_token: token,
+      p_novel_slug: novelSlug,
+      p_chapter_number: chapterNumber,
+    });
+    if (error) throw error;
+  } catch (e) {
+    throw sanitizeError(e);
+  }
 }
 
 // ---------- Helpers ----------

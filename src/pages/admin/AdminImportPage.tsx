@@ -20,6 +20,7 @@ import {
   listNovels,
   getNovelAdmin,
   createChapter,
+  updateChapter,
   type Novel,
 } from "../../lib/api";
 import { Calendar, Zap, Clock } from "lucide-react";
@@ -183,26 +184,14 @@ export default function AdminImportPage() {
       const publishAt = chapterStatus === "draft" ? null : scheduleMode !== "immediate" ? toIsoFromJakarta(scheduleStart) : null;
 
       if (existing) {
-        const { supabase } = await import("../../lib/supabase");
-        const { data: novelRow } = await supabase
-          .from("novels")
-          .select("id")
-          .eq("slug", selectedNovel)
-          .maybeSingle();
-        if (!novelRow) throw new Error("Novel not found");
-        const { error: upErr } = await supabase
-          .from("chapters")
-          .update({
-            title,
-            content,
-            published_at: new Date().toISOString().slice(0, 10),
-            status: chapterStatus,
-            published: isPublished,
-            publish_at: publishAt,
-          })
-          .eq("novel_id", novelRow.id)
-          .eq("number", chapterNumber);
-        if (upErr) throw upErr;
+        await updateChapter(selectedNovel, chapterNumber, {
+          title,
+          content,
+          publishedAt: new Date().toISOString().slice(0, 10),
+          status: chapterStatus,
+          published: isPublished,
+          publishAt,
+        });
       } else {
         await createChapter(selectedNovel, {
           number: chapterNumber,
@@ -219,7 +208,7 @@ export default function AdminImportPage() {
       setResults([{ title, paragraphs: parsed.paragraphs.length, status: "ok" }]);
       setStep("done");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Import failed");
+      setError(e instanceof Error ? e.message : "Import failed. Please try again.");
     } finally {
       setImporting(false);
     }
@@ -306,26 +295,14 @@ export default function AdminImportPage() {
       const publishAt = chapterStatus === "draft" ? null : scheduleMode !== "immediate" ? toIsoFromJakarta(scheduleStart) : null;
 
       if (existing) {
-        const { supabase } = await import("../../lib/supabase");
-        const { data: novelRow } = await supabase
-          .from("novels")
-          .select("id")
-          .eq("slug", selectedNovel)
-          .maybeSingle();
-        if (!novelRow) throw new Error("Novel not found");
-        const { error: upErr } = await supabase
-          .from("chapters")
-          .update({
-            title,
-            content,
-            published_at: new Date().toISOString().slice(0, 10),
-            status: chapterStatus,
-            published: isPublished,
-            publish_at: publishAt,
-          })
-          .eq("novel_id", novelRow.id)
-          .eq("number", chapterNumber);
-        if (upErr) throw upErr;
+        await updateChapter(selectedNovel, chapterNumber, {
+          title,
+          content,
+          publishedAt: new Date().toISOString().slice(0, 10),
+          status: chapterStatus,
+          published: isPublished,
+          publishAt,
+        });
       } else {
         await createChapter(selectedNovel, {
           number: chapterNumber,
@@ -342,7 +319,7 @@ export default function AdminImportPage() {
       setResults([{ title, paragraphs: txtParsed.paragraphs.length, status: "ok" }]);
       setStep("done");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Import failed");
+      setError(e instanceof Error ? e.message : "Import failed. Please try again.");
     } finally {
       setTxtImporting(false);
     }
