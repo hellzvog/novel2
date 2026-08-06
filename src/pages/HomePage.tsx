@@ -254,39 +254,34 @@ function HeroSlider({ novels, onNavigate }: { novels: Novel[]; onNavigate: (slug
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Fixed height banner: left fills remaining space, right is exactly cover-width */}
-      <div className="flex" style={{ height: "360px" }}>
-        {/* Left — gradient content panel */}
-        <div className="relative flex min-w-0 flex-1 flex-col justify-center gap-4 px-8 py-8 md:px-12"
-          style={{ background: "linear-gradient(135deg, #1e3a8a, #0ea5e9)" }}>
+      <div className="grid md:grid-cols-2">
+        <div className="relative flex flex-col justify-center gap-3 p-6 md:p-10"
+          style={{ background: "linear-gradient(135deg, #1e3a8a, #0ea5e9)", height: "360px" }}>
           <div className="absolute inset-0 opacity-20" style={{
             backgroundImage: "radial-gradient(circle at 30% 20%, rgba(255,255,255,0.3) 0%, transparent 50%)",
           }} />
           <span className="relative w-fit rounded-full bg-amber-400 px-3 py-1 text-xs font-bold uppercase tracking-wider text-slate-900">
             Featured
           </span>
-          <h1 className="relative line-clamp-2 font-serif text-2xl font-black leading-snug text-white md:text-3xl">
+          <h1 className="relative line-clamp-2 font-serif text-3xl font-black leading-tight text-white md:text-4xl">
             {hero.title}
           </h1>
-          <div className="relative flex flex-col gap-2">
-            <p className="text-sm font-medium text-white/80">by {hero.author}</p>
-            <p className="line-clamp-3 text-sm leading-relaxed text-white/90">{hero.synopsis}</p>
-            <div className="flex flex-wrap gap-2 pt-1">
-              {hero.genres.map((g) => (
-                <span key={g} className="rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">{g}</span>
-              ))}
-            </div>
+          <p className="relative text-sm text-white/80">by {hero.author}</p>
+          <p className="relative line-clamp-3 text-sm text-white/90">{hero.synopsis}</p>
+          <div className="relative flex flex-wrap gap-2">
+            {hero.genres.map((g) => (
+              <span key={g} className="rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">{g}</span>
+            ))}
           </div>
           <button
             onClick={() => onNavigate(hero.slug)}
-            className="relative flex w-fit items-center gap-2 rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-bold text-slate-900 transition-all hover:bg-amber-300 hover:shadow-lg"
+            className="relative mt-2 flex w-fit items-center gap-2 rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-bold text-slate-900 transition-all hover:bg-amber-300 hover:shadow-lg"
           >
             Start Reading <ArrowRight size={16} />
           </button>
         </div>
-        {/* Right — cover image, exactly wide enough to hold it */}
-        <div className="hidden shrink-0 items-center justify-center bg-slate-800/60 md:flex" style={{ width: "280px" }}>
-          <Cover title={hero.title} hue={hero.coverHue} coverUrl={hero.coverUrl} className="h-[300px] w-[210px] shadow-2xl" />
+        <div className="hidden items-center justify-center bg-slate-100 p-10 md:flex dark:bg-slate-800">
+          <Cover title={hero.title} hue={hero.coverHue} coverUrl={hero.coverUrl} className="h-[300px] w-[240px] shadow-2xl" />
         </div>
       </div>
 
