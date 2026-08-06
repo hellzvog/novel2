@@ -256,14 +256,14 @@ function HeroSlider({ novels, onNavigate }: { novels: Novel[]; onNavigate: (slug
     >
       <div className="grid md:grid-cols-2">
         <div className="relative flex flex-col justify-center gap-3 p-6 md:p-10"
-          style={{ background: "linear-gradient(135deg, #1e3a8a, #0ea5e9)", height: "360px" }}>
+          style={{ background: "linear-gradient(135deg, #1e3a8a, #0ea5e9)", height: "400px" }}>
           <div className="absolute inset-0 opacity-20" style={{
             backgroundImage: "radial-gradient(circle at 30% 20%, rgba(255,255,255,0.3) 0%, transparent 50%)",
           }} />
           <span className="relative w-fit rounded-full bg-amber-400 px-3 py-1 text-xs font-bold uppercase tracking-wider text-slate-900">
             Featured
           </span>
-          <h1 className="relative line-clamp-2 font-serif text-3xl font-black leading-tight text-white md:text-4xl">
+          <h1 className="relative line-clamp-2 pb-1 font-serif text-3xl font-black leading-[1.25] text-white md:text-4xl">
             {hero.title}
           </h1>
           <p className="relative text-sm text-white/80">by {hero.author}</p>
