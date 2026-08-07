@@ -97,3 +97,46 @@ export function stripHtml(html: string): string {
   const doc = new DOMParser().parseFromString(html, "text/html");
   return (doc.body.textContent || "").replace(/\s+/g, " ").trim();
 }
+
+/**
+ * Convert a stored text[] content array into a single HTML string for the
+ * RichTextEditor. Each array element is one paragraph. Elements that already
+ * contain HTML tags are passed through; plain-text elements are wrapped in <p>.
+ */
+export function contentArrayToEditorHtml(content: string[]): string {
+  if (!content || content.length === 0) return "";
+  return content
+    .map((para) => {
+      const trimmed = para.trim();
+      if (!trimmed) return "";
+      if (isHtmlContent(trimmed)) return trimmed;
+      return `<p>${trimmed}</p>`;
+    })
+    .filter(Boolean)
+    .join("");
+}
+
+/**
+ * Convert the RichTextEditor's HTML output back into a text[] array where each
+ * top-level block element becomes one array element — matching the original
+ * paragraph-array format the database expects.
+ */
+export function editorHtmlToContentArray(html: string): string[] {
+  if (!html || !html.trim()) return [];
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const result: string[] = [];
+
+  for (const node of Array.from(doc.body.childNodes)) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = (node.textContent ?? "").trim();
+      if (text) {
+        const escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        result.push(`<p>${escaped}</p>`);
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const outer = (node as Element).outerHTML;
+      if (outer.trim()) result.push(outer);
+    }
+  }
+  return result;
+}

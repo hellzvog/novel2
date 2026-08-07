@@ -12,6 +12,7 @@ import {
   saveReadingHistory,
 } from "../lib/reader-storage";
 import { computeAdInsertions } from "../lib/reader-ads";
+import { sanitizeHtml } from "../lib/html-sanitize";
 import NotFound from "../components/NotFound";
 
 const WIDTH_CLASSES: Record<string, string> = {
@@ -230,10 +231,13 @@ export default function ChapterReaderPage({ slug, chapter }: { slug: string; cha
           className={`${WIDTH_CLASSES[settings.width]} ${FONT_FAMILY[settings.fontFamily]} mx-auto`}
           style={{ fontSize: `${settings.fontSize}px`, lineHeight: settings.lineHeight }}
         >
-          <div className="space-y-4 text-slate-700 dark:text-slate-200">
+          <div className="reader-html-content space-y-4 text-slate-700 dark:text-slate-200">
             {currentChapter.content.map((paragraph, i) => (
               <div key={i}>
-                <p style={{ whiteSpace: "pre-line" }}>{decodeEntities(paragraph)}</p>
+                <div
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(paragraph) }}
+                  style={{ whiteSpace: "pre-line" }}
+                />
                 {adPlan && adPlan.insertAfter.includes(i) && (
                   <AdBanner placement="reader" format="in-article" className="my-8" />
                 )}

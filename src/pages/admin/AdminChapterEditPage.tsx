@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, Save, Loader2, AlertCircle, Calendar, Zap, Clock } from "lucide-react";
 import { getNovelAdmin, getChapterAdmin, createChapter, updateChapter, type Novel, type Chapter } from "../../lib/api";
-import { sanitizeHtml } from "../../lib/html-sanitize";
+import { sanitizeHtml, contentArrayToEditorHtml, editorHtmlToContentArray } from "../../lib/html-sanitize";
 import RichTextEditor from "../../components/RichTextEditor";
 import { useRouter } from "../../lib/router";
 import AdminLayout from "../../components/admin/AdminLayout";
@@ -61,7 +61,7 @@ export default function AdminChapterEditPage({ slug, chapter }: { slug: string; 
           const result = await getChapterAdmin(slug, chapter);
           if (result) {
             setTitle(result.chapter.title);
-            setContent(result.chapter.content.join("\n\n"));
+            setContent(contentArrayToEditorHtml(result.chapter.content));
             setPublishedAt(result.chapter.publishedAt || new Date().toISOString().slice(0, 10));
             setStatus(result.chapter.status);
             setNumber(result.chapter.number);
@@ -94,10 +94,11 @@ export default function AdminChapterEditPage({ slug, chapter }: { slug: string; 
     setSaving(true);
     try {
       const sanitized = sanitizeHtml(content);
+      const contentArray = editorHtmlToContentArray(sanitized);
       const input = {
         number,
         title: title.trim(),
-        content: [sanitized],
+        content: contentArray,
         publishedAt,
         status,
         published: status === "draft" ? false : publishMode === "now",
