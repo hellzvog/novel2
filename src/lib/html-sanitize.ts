@@ -20,7 +20,11 @@ function isDangerousUrl(url: string): boolean {
 export function sanitizeHtml(html: string): string {
   if (!html) return "";
   const doc = new DOMParser().parseFromString(html, "text/html");
-  return cleanNode(doc.body).innerHTML;
+  const children = Array.from(doc.body.childNodes);
+  for (const child of children) {
+    cleanNode(child);
+  }
+  return doc.body.innerHTML;
 }
 
 function cleanNode(node: Node): Node {
