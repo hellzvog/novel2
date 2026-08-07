@@ -280,30 +280,6 @@ export async function autoPublishChapters(): Promise<void> {
   }
 }
 
-async function fetchChapterCounts(): Promise<Map<string, number>> {
-  const { data, error } = await supabase.rpc("get_novel_chapter_counts");
-  if (error || !data) return new Map();
-  return new Map((data as { novel_id: string; chapter_count: number }[]).map((r) => [r.novel_id, r.chapter_count]));
-}
-
-function withChapterCount(novel: Novel, counts: Map<string, number>): Novel {
-  const count = counts.get(novel.id) ?? 0;
-  if (count === 0) return novel;
-  return {
-    ...novel,
-    chapters: Array.from({ length: count }, (_, i) => ({
-      id: `stub-${novel.id}-${i}`,
-      number: i + 1,
-      title: "",
-      content: [],
-      publishedAt: "",
-      status: "published" as const,
-      published: true,
-      publishAt: null,
-    })),
-  };
-}
-
 export async function listNovels(): Promise<Novel[]> {
   await autoPublishChapters();
   const { data, error } = await supabase
@@ -311,8 +287,7 @@ export async function listNovels(): Promise<Novel[]> {
     .select(NOVEL_SELECT)
     .order("created_at", { ascending: false });
   if (error) throw error;
-  const counts = await fetchChapterCounts();
-  return (data ?? []).map((n) => withChapterCount(mapNovel(n as unknown as NovelRow), counts));
+  return (data ?? []).map((n) => mapNovel(n as unknown as NovelRow));
 }
 
 export async function listFeaturedNovels(limit = 6): Promise<Novel[]> {
@@ -324,8 +299,7 @@ export async function listFeaturedNovels(limit = 6): Promise<Novel[]> {
     .order("featured_at", { ascending: false })
     .limit(limit);
   if (error) throw error;
-  const counts = await fetchChapterCounts();
-  return (data ?? []).map((n) => withChapterCount(mapNovel(n as unknown as NovelRow), counts));
+  return (data ?? []).map((n) => mapNovel(n as unknown as NovelRow));
 }
 
 export async function listPopularNovels(limit = 12): Promise<Novel[]> {
@@ -337,8 +311,7 @@ export async function listPopularNovels(limit = 12): Promise<Novel[]> {
     .order("popular_at", { ascending: false })
     .limit(limit);
   if (error) throw error;
-  const counts = await fetchChapterCounts();
-  return (data ?? []).map((n) => withChapterCount(mapNovel(n as unknown as NovelRow), counts));
+  return (data ?? []).map((n) => mapNovel(n as unknown as NovelRow));
 }
 
 export async function getNovel(slug: string): Promise<Novel | null> {
@@ -433,8 +406,7 @@ export async function searchNovels(filters: NovelFilters): Promise<{ novels: Nov
   const { data, error, count } = await query;
   if (error) throw error;
 
-  const counts = await fetchChapterCounts();
-  const novels = (data ?? []).map((n) => withChapterCount(mapNovel(n as unknown as NovelRow), counts));
+  const novels = (data ?? []).map((n) => mapNovel(n as unknown as NovelRow));
 
   return { novels, total: count ?? novels.length };
 }

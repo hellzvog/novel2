@@ -24,11 +24,6 @@ Deno.serve(async (req: Request) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // The auto_publish_chapters RPC is a SECURITY DEFINER function that
-    // atomically promotes all chapters whose publish_at has passed.
-    // It sets published=true, status='published', and published_at.
-    // If it fails for any reason, no rows are changed — chapters stay
-    // in their scheduled state and will be retried on the next call.
     const { data, error } = await supabase.rpc("auto_publish_chapters");
 
     if (error) {
