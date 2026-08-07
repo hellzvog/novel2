@@ -12,6 +12,12 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
+    "@tiptap/extension-link": "^3.29.2",
+    "@tiptap/extension-placeholder": "^3.29.2",
+    "@tiptap/extension-underline": "^3.29.2",
+    "@tiptap/pm": "^3.29.2",
+    "@tiptap/react": "^3.29.2",
+    "@tiptap/starter-kit": "^3.29.2",
     "jszip": "^3.10.1",
     "lucide-react": "^0.344.0",
     "mammoth": "^1.12.0",

@@ -4,6 +4,8 @@ import { getNovelAdmin, getGenres, getTags, createNovel, updateNovel, type Novel
 import { supabase } from "../../lib/supabase";
 import { useRouter } from "../../lib/router";
 import { optimizeCoverImage, optimizedExtension } from "../../lib/image-optimize";
+import { sanitizeHtml } from "../../lib/html-sanitize";
+import RichTextEditor from "../../components/RichTextEditor";
 import AdminLayout from "../../components/admin/AdminLayout";
 
 const STATUSES: NovelStatus[] = ["Ongoing", "Completed", "Hiatus"];
@@ -115,7 +117,7 @@ export default function AdminNovelEditPage({ slug }: { slug?: string }) {
         altTitle: altTitle.trim(),
         author: author.trim(),
         status,
-        synopsis: synopsis.trim(),
+      synopsis: sanitizeHtml(synopsis.trim()),
         coverHue,
         coverUrl,
         genres: selectedGenres,
@@ -206,12 +208,11 @@ export default function AdminNovelEditPage({ slug }: { slug?: string }) {
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Synopsis</label>
-                <textarea
+                <RichTextEditor
                   value={synopsis}
-                  onChange={(e) => setSynopsis(e.target.value)}
-                  rows={5}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-amber-400 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+                  onChange={setSynopsis}
                   placeholder="Enter novel synopsis"
+                  minHeight={150}
                 />
               </div>
               <div>

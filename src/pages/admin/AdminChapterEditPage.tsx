@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, Save, Loader2, AlertCircle, Calendar, Zap, Clock } from "lucide-react";
 import { getNovelAdmin, getChapterAdmin, createChapter, updateChapter, type Novel, type Chapter } from "../../lib/api";
+import { sanitizeHtml } from "../../lib/html-sanitize";
+import RichTextEditor from "../../components/RichTextEditor";
 import { useRouter } from "../../lib/router";
 import AdminLayout from "../../components/admin/AdminLayout";
 
@@ -91,11 +93,11 @@ export default function AdminChapterEditPage({ slug, chapter }: { slug: string; 
     if (publishMode === "schedule" && !scheduleDate) { setError("Schedule date is required"); return; }
     setSaving(true);
     try {
-      const paragraphs = content.split(/\n\n+/).map((p) => p.trim()).filter(Boolean);
+      const sanitized = sanitizeHtml(content);
       const input = {
         number,
         title: title.trim(),
-        content: paragraphs,
+        content: [sanitized],
         publishedAt,
         status,
         published: status === "draft" ? false : publishMode === "now",
@@ -261,18 +263,14 @@ export default function AdminChapterEditPage({ slug, chapter }: { slug: string; 
 
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-              Chapter Content <span className="text-xs text-slate-400">(separate paragraphs with a blank line)</span>
+              Chapter Content
             </label>
-            <textarea
+            <RichTextEditor
               value={content}
-              onChange={(e) => setContent(e.target.value)}
-              rows={16}
-              placeholder="Write or paste chapter content here. Separate paragraphs with a blank line."
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 font-serif text-sm leading-relaxed outline-none focus:border-amber-400 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+              onChange={setContent}
+              placeholder="Write or paste chapter content here..."
+              minHeight={400}
             />
-            <p className="mt-1 text-xs text-slate-400">
-              {content.split(/\n\n+/).filter((p) => p.trim()).length} paragraphs
-            </p>
           </div>
         </div>
       </div>

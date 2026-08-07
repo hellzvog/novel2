@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { stripHtml } from "./html-sanitize";
 
 export const SITE_NAME = "AddNovel";
 export const SITE_TAGLINE = "Read Free English Web Novels Online";
@@ -123,10 +124,11 @@ export function useSeo(opts: SeoOptions) {
   }, [opts.title, opts.description, opts.path, opts.image, opts.type, opts.publishedTime, opts.robots]);
 }
 
-/** Trim a synopsis to ~160 chars at a word boundary. */
+/** Trim a synopsis to ~160 chars at a word boundary. Strips HTML first. */
 export function trimDescription(text: string, max = 160): string {
-  if (text.length <= max) return text;
-  const slice = text.slice(0, max);
+  const plain = stripHtml(text);
+  if (plain.length <= max) return plain;
+  const slice = plain.slice(0, max);
   const lastSpace = slice.lastIndexOf(" ");
   return `${slice.slice(0, lastSpace > 0 ? lastSpace : max)}…`;
 }

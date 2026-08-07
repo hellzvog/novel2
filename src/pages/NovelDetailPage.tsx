@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { BookOpen, Eye, Play, ChevronDown, ChevronUp, Loader2, BookX, Heart, History, Clock } from "lucide-react";
 import { getNovel, relatedNovels, formatViews, decodeEntities, type Novel } from "../lib/api";
+import { sanitizeHtml, stripHtml } from "../lib/html-sanitize";
 import { useRouter } from "../lib/router";
 import Cover from "../components/Cover";
 import NovelCard from "../components/NovelCard";
@@ -58,7 +59,7 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
     image: novel?.coverUrl ?? undefined,
   });
   useJsonLd("ld-book", novel ? buildBookJsonLd({
-    title: novel.title, author: novel.author, synopsis: novel.synopsis,
+    title: novel.title, author: novel.author, synopsis: stripHtml(novel.synopsis),
     genres: novel.genres, slug: novel.slug, coverUrl: novel.coverUrl,
   }) : null);
   useJsonLd("ld-breadcrumb-novel", novel ? buildBreadcrumbJsonLd([
@@ -179,7 +180,10 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
         <h2 className="mb-3 flex items-center gap-2 font-serif text-lg font-bold text-slate-900 dark:text-white">
           <span className="h-5 w-1.5 rounded-full bg-amber-500" /> Synopsis
         </h2>
-        <p className="leading-relaxed text-slate-600 dark:text-slate-300" style={{ whiteSpace: "pre-line" }}>{decodeEntities(novel.synopsis)}</p>
+        <div
+          className="reader-html-content leading-relaxed text-slate-600 dark:text-slate-300"
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(novel.synopsis) }}
+        />
         {novel.genres.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">
             {novel.genres.map((g) => (
