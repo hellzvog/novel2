@@ -77,14 +77,34 @@ export default function AdminNovelEditPage({ slug }: { slug?: string }) {
         throw new Error("File is too large. Maximum size is 5 MB.");
       }
       const optimized = await optimizeCoverImage(file);
-      const ext = optimizedExtension(optimized);
-      const path = `${crypto.randomUUID()}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from("novel-covers")
-        .upload(path, optimized, { contentType: optimized.type, upsert: false });
-      if (upErr) throw upErr;
-      const { data: urlData } = supabase.storage.from("novel-covers").getPublicUrl(path);
-      setCoverUrl(urlData.publicUrl);
+      const adminToken = localStorage.getItem("addnovel_admin_token");
+      if (!adminToken) throw new Error("Admin session expired. Please log in again.");
+
+      const formData = new FormData();
+      formData.append("token", adminToken);
+      formData.append("file", optimized, `cover.${optimizedExtension(optimized)}`);
+
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/secure-cover-upload`;
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        let msg = "Upload failed. Please try again.";
+        try {
+          const body = await response.json();
+          if (body?.error) msg = body.error;
+        } catch { /* keep default */ }
+        throw new Error(msg);
+      }
+
+      const data: { url?: string } = await response.json();
+      if (!data.url) throw new Error("Upload succeeded but no URL was returned.");
+      setCoverUrl(data.url);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed. Please try again.");
     } finally {
