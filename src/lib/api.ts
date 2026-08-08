@@ -375,17 +375,10 @@ export async function searchNovels(filters: NovelFilters): Promise<{ novels: Nov
   // Genre filter at the DB level: resolve matching novel IDs first so
   // pagination and count are correct.
   if (filters.genre && filters.genre !== "All") {
-    let { data: genreRows } = await supabase
+    const { data: genreRows } = await supabase
       .from("genres")
       .select("id")
-      .eq("slug", filters.genre);
-    if (!genreRows || genreRows.length === 0) {
-      const fallback = await supabase
-        .from("genres")
-        .select("id")
-        .eq("name", filters.genre);
-      genreRows = fallback.data;
-    }
+      .eq("name", filters.genre);
     if (genreRows && genreRows.length > 0) {
       const genreId = genreRows[0].id;
       const { data: linkRows } = await supabase
