@@ -106,7 +106,7 @@ async function buildSitemap(): Promise<string> {
         const filter = `novel_id=in.(${batch.join(",")})`;
         try {
           const ch = await supabaseFetch<ChapterRow[]>(
-            `/rest/v1/chapters?select=novel_id,number,title,published_at&${filter}&order=number.asc`
+            `/rest/v1/chapters?select=novel_id,number,title,published_at&${filter}&published=eq.true&order=number.asc`
           );
           allChapters.push(...ch);
         } catch { /* skip on error */ }

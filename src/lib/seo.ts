@@ -28,7 +28,7 @@ export function buildUrl(path: string): string {
 }
 
 /** Default Open Graph image (1200x630 PNG). */
-export const DEFAULT_OG_IMAGE = "/og-default.png";
+export const DEFAULT_OG_IMAGE = "/og-default.svg";
 
 type RobotsMode = "index" | "noindex";
 
