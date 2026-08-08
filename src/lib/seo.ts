@@ -40,6 +40,7 @@ interface SeoOptions {
   type?: "website" | "article" | "book";
   publishedTime?: string;
   robots?: RobotsMode;
+  skip?: boolean;
 }
 
 function upsertMeta(attr: "name" | "property", key: string, content: string) {
@@ -76,6 +77,7 @@ function removeLink(rel: string) {
  */
 export function useSeo(opts: SeoOptions) {
   useEffect(() => {
+    if (opts.skip) return;
     const url = buildUrl(opts.path);
     const image = opts.image ? (opts.image.startsWith("http") ? opts.image : buildUrl(opts.image)) : buildUrl(DEFAULT_OG_IMAGE);
     const title = opts.title;
