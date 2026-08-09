@@ -274,8 +274,11 @@ function HeroSlider({ novels, onNavigate }: { novels: Novel[]; onNavigate: (slug
           <p className="relative text-sm text-white/80">by {hero.author}</p>
           <p className="relative line-clamp-3 overflow-hidden text-sm text-white/90">{stripHtml(hero.synopsis)}</p>
           <div className="relative flex flex-wrap gap-2">
-            {hero.genres.map((g) => (
-              <span key={g} className="rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">{g}</span>
+            {hero.genres.slice(0, 3).map((g) => (
+              <span key={g} className="block max-w-[130px] truncate rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm md:max-w-[160px]">{g}</span>
+            ))}
+            {hero.genres.slice(3, 4).map((g) => (
+              <span key={g} className="hidden max-w-[160px] truncate rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm md:block">{g}</span>
             ))}
           </div>
           <button
