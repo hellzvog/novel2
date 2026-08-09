@@ -17,7 +17,7 @@ import {
 import mammoth from "mammoth";
 import JSZip from "jszip";
 import {
-  listNovelsAdmin,
+  listNovels,
   getNovelAdmin,
   createChapter,
   updateChapter,
@@ -100,7 +100,7 @@ export default function AdminImportPage() {
   const multiTxtInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    listNovelsAdmin().then((n) => setNovels(n)).catch(() => {});
+    listNovels().then((n) => setNovels(n)).catch(() => {});
   }, []);
 
   const selectedNovelData = novels.find((n) => n.slug === selectedNovel);
@@ -554,7 +554,7 @@ export default function AdminImportPage() {
         >
           <option value="">— Choose a novel —</option>
           {novels.map((n) => (
-            <option key={n.id} value={n.slug}>{n.title} ({n.chapterCount} chapters)</option>
+            <option key={n.id} value={n.slug}>{n.title} ({n.chapters.length} chapters)</option>
           ))}
         </select>
       </div>

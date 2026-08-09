@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { ArrowRight, Clock, Flame, TrendingUp, Loader2, AlertCircle, ChevronRight, ChevronLeft } from "lucide-react";
-import { listNovels, listFeaturedNovels, listPopularNovels, getGenres, type Novel, formatViews, latestUpdateLabel, latestUpdateTime } from "../lib/api";
+import { listNovels, listFeaturedNovels, listPopularNovels, getGenres, type Novel, formatViews, latestUpdateLabel } from "../lib/api";
 import { useRouter } from "../lib/router";
 import NovelCard from "../components/NovelCard";
 import Section from "../components/Section";
@@ -85,8 +85,8 @@ export default function HomePage() {
   }
 
   const latest = [...novels].sort((a, b) => {
-    const al = a.latestChapterAt ?? "";
-    const bl = b.latestChapterAt ?? "";
+    const al = a.chapters[a.chapters.length - 1]?.publishedAt ?? "";
+    const bl = b.chapters[b.chapters.length - 1]?.publishedAt ?? "";
     return bl.localeCompare(al);
   }).slice(0, 12);
   const completed = novels.filter((n) => n.status === "Completed").slice(0, 6);
@@ -138,6 +138,7 @@ export default function HomePage() {
       <Section title="Latest Updates" onMore={() => navigate({ name: "search" })}>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {latest.map((n) => {
+            const last = n.chapters[n.chapters.length - 1];
             return (
               <button
                 key={n.id}
@@ -148,7 +149,7 @@ export default function HomePage() {
                 <div className="min-w-0 flex-1">
                   <h3 className="truncate text-sm font-semibold text-slate-900 group-hover:text-amber-600 dark:text-slate-100 dark:group-hover:text-amber-400">{n.title}</h3>
                   <p className="truncate text-xs text-slate-500 dark:text-slate-400">{n.author}</p>
-                  <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">{latestUpdateLabel(n)} · {latestUpdateTime(n)}</p>
+                  <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">{latestUpdateLabel(n)} · {last?.publishedAt}</p>
                 </div>
                 <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300">{n.status}</span>
               </button>
@@ -200,7 +201,7 @@ export default function HomePage() {
       <div className="mb-4 grid grid-cols-2 gap-4 rounded-2xl border border-slate-200 bg-white p-6 md:grid-cols-4 dark:border-slate-700 dark:bg-slate-800">
         {[
           { icon: <Flame size={20} className="text-amber-500" />, label: "Novels", value: novels.length },
-          { icon: <TrendingUp size={20} className="text-emerald-500" />, label: "Chapters", value: novels.reduce((s, n) => s + n.chapterCount, 0) },
+          { icon: <TrendingUp size={20} className="text-emerald-500" />, label: "Chapters", value: novels.reduce((s, n) => s + n.chapters.length, 0) },
           { icon: <Flame size={20} className="text-rose-500" />, label: "Ongoing", value: novels.filter((n) => n.status === "Ongoing").length },
           { icon: <TrendingUp size={20} className="text-blue-500" />, label: "Completed", value: novels.filter((n) => n.status === "Completed").length },
         ].map((s) => (

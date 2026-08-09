@@ -45,6 +45,20 @@ function Pages() {
   const isAdminLogin = route.name === "admin-login";
   const isAdminRoute = ADMIN_ROUTES.has(route.name);
 
+  const seoTitle = isAdminLogin
+    ? "Admin Login - AddNovel"
+    : isAdminRoute
+      ? "Admin - AddNovel"
+      : "";
+  const seoPath = isAdminLogin ? "/admin/login" : isAdminRoute ? "/admin" : "/";
+
+  useSeo({
+    title: seoTitle,
+    path: seoPath,
+    robots: isAdminLogin || isAdminRoute ? "noindex" : "index",
+    skip: !isAdminLogin && !isAdminRoute,
+  });
+
   // Record navigations for session-level abuse detection.
   useEffect(() => {
     recordNavigation();
@@ -59,7 +73,6 @@ function Pages() {
 
   // Admin login page renders standalone (no site header/footer)
   if (isAdminLogin) {
-    useSeo({ title: "Admin Login - AddNovel", path: "/admin/login", robots: "noindex" });
     if (user && isAdmin) {
       navigate({ name: "admin" });
       return null;
@@ -73,7 +86,6 @@ function Pages() {
 
   // Admin pages render with admin layout (guard handled by redirect above)
   if (isAdminRoute) {
-    useSeo({ title: "Admin - AddNovel", path: "/admin", robots: "noindex" });
     if (loading || !user || !isAdmin) {
       return (
         <div className="flex min-h-screen items-center justify-center bg-slate-100 dark:bg-slate-900">
