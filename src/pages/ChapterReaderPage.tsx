@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Loader2, FileX2, Settings, X, Moon, Sun } from "lucide-react";
-import { getChapter, incrementViews, decodeEntities, type Novel, type Chapter } from "../lib/api";
+import { getChapter, incrementViews, decodeEntities, listNovels, type Novel, type Chapter } from "../lib/api";
 import { useTheme } from "../lib/theme";
 import { useRouter } from "../lib/router";
+import NovelCard from "../components/NovelCard";
 import { useJsonLd, buildChapterJsonLd, buildBreadcrumbJsonLd } from "../lib/jsonld";
 import { useSeo } from "../lib/seo";
 import AdBanner from "../components/AdBanner";
@@ -28,6 +29,17 @@ const FONT_FAMILY: Record<string, string> = {
   mono: "font-mono",
 };
 
+function mulberry32(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a |= 0;
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 export default function ChapterReaderPage({ slug, chapter }: { slug: string; chapter: number }) {
   const { navigate } = useRouter();
   const { theme, toggle } = useTheme();
@@ -37,7 +49,26 @@ export default function ChapterReaderPage({ slug, chapter }: { slug: string; cha
   const [error, setError] = useState<string | null>(null);
   const [settings, setSettings] = useState(getReaderSettings());
   const [showSettings, setShowSettings] = useState(false);
+  const [allNovels, setAllNovels] = useState<Novel[]>([]);
   const progressTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    listNovels().then(setAllNovels).catch(() => {});
+  }, []);
+
+  const recommendations = useMemo(() => {
+    if (!novel) return [];
+    const others = allNovels.filter((n) => n.id !== novel.id);
+    const seed = novel.id.split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+    const rng = mulberry32(seed);
+    const picked: Novel[] = [];
+    const pool = [...others];
+    while (pool.length > 0 && picked.length < 3) {
+      const idx = Math.floor(rng() * pool.length);
+      picked.push(pool.splice(idx, 1)[0]);
+    }
+    return picked;
+  }, [novel, allNovels]);
 
   useEffect(() => {
     let active = true;
@@ -254,6 +285,18 @@ export default function ChapterReaderPage({ slug, chapter }: { slug: string; cha
             ))}
           </div>
         </div>
+
+        {/* You May Also Like */}
+        {recommendations.length === 3 && (
+          <section className="mt-12 border-t border-slate-200 pt-8 dark:border-slate-700">
+            <h2 className="mb-4 font-serif text-xl font-bold text-slate-900 dark:text-white">You May Also Like</h2>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {recommendations.map((n) => (
+                <NovelCard key={n.id} novel={n} />
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Chapter nav */}
         <div className="mt-10 flex items-center justify-between gap-4 border-t border-slate-200 pt-6 dark:border-slate-700">
