@@ -5,7 +5,7 @@ import { useRouter } from "../lib/router";
 import NovelCard from "../components/NovelCard";
 import Section from "../components/Section";
 import Cover from "../components/Cover";
-import { getReadingHistory, type ReadingHistoryEntry } from "../lib/reader-storage";
+import { getReadingHistory, pruneReadingHistory, type ReadingHistoryEntry } from "../lib/reader-storage";
 import { useSeo } from "../lib/seo";
 import { useJsonLd, buildWebsiteJsonLd } from "../lib/jsonld";
 import AdBanner from "../components/AdBanner";
@@ -38,7 +38,8 @@ export default function HomePage() {
         setFeaturedNovels(f);
         setPopularNovels(p);
         setGenres(g.map((x) => x.name));
-        const stored = getReadingHistory();
+        const validIds = new Set(n.map((nv) => nv.id));
+        const stored = pruneReadingHistory(validIds);
         const byId = new Map(n.map((nv) => [nv.id, nv]));
         setHistory(
           stored.map((h) => {

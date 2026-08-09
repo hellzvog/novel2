@@ -91,6 +91,13 @@ export function clearReadingHistory(): void {
   localStorage.removeItem(HISTORY_KEY);
 }
 
+export function pruneReadingHistory(validNovelIds: Set<string>): ReadingHistoryEntry[] {
+  const history = getReadingHistory();
+  const kept = history.filter((h) => validNovelIds.has(h.novelId));
+  if (kept.length !== history.length) safeWrite(HISTORY_KEY, kept);
+  return kept;
+}
+
 // ─── Favorites ───
 
 export function getFavorites(): FavoriteEntry[] {
