@@ -181,7 +181,8 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
           <span className="h-5 w-1.5 rounded-full bg-amber-500" /> Synopsis
         </h2>
         <div
-          className="reader-html-content leading-relaxed text-slate-600 dark:text-slate-300"
+          className="reader-html-content min-w-0 break-words leading-relaxed text-slate-600 dark:text-slate-300"
+          style={{ overflowWrap: "anywhere" }}
           dangerouslySetInnerHTML={{ __html: sanitizeHtml(novel.synopsis) }}
         />
         {novel.genres.length > 0 && (
