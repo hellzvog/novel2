@@ -186,14 +186,9 @@ export function sitemapPlugin(): Plugin {
       const outDir = resolve(dir);
       mkdirSync(outDir, { recursive: true });
 
-      // Write sitemap.xml as a static file for production hosts.
-      try {
-        const xml = await buildSitemap();
-        writeFileSync(resolve(outDir, "sitemap.xml"), xml);
-        console.log("[sitemap] wrote sitemap.xml");
-      } catch (e) {
-        console.error(`[sitemap] failed to write sitemap.xml: ${e instanceof Error ? e.message : String(e)}`);
-      }
+      // sitemap.xml is now served dynamically by the Cloudflare Pages Function
+      // at /functions/sitemap.xml.ts — do NOT write a static file here, otherwise
+      // it would shadow the dynamic route and go stale until the next deploy.
 
       // Write robots.txt with absolute sitemap URL from VITE_SITE_URL.
       try {
