@@ -9,6 +9,7 @@ import { getReadingHistory, pruneReadingHistory, type ReadingHistoryEntry } from
 import { useSeo } from "../lib/seo";
 import { useJsonLd, buildWebsiteJsonLd } from "../lib/jsonld";
 import AdBanner from "../components/AdBanner";
+import { stripHtml } from "../lib/html-sanitize";
 
 export default function HomePage() {
   const { navigate } = useRouter();
@@ -259,7 +260,7 @@ function HeroSlider({ novels, onNavigate }: { novels: Novel[]; onNavigate: (slug
       onTouchEnd={handleTouchEnd}
     >
       <div className="grid md:grid-cols-2">
-        <div className="relative flex flex-col justify-center gap-3 p-6 md:p-10"
+        <div className="relative flex min-w-0 flex-col justify-center gap-3 px-14 py-6 md:px-20 md:py-10"
           style={{ background: "linear-gradient(135deg, #1e3a8a, #0ea5e9)", height: "400px" }}>
           <div className="absolute inset-0 opacity-20" style={{
             backgroundImage: "radial-gradient(circle at 30% 20%, rgba(255,255,255,0.3) 0%, transparent 50%)",
@@ -267,11 +268,11 @@ function HeroSlider({ novels, onNavigate }: { novels: Novel[]; onNavigate: (slug
           <span className="relative w-fit rounded-full bg-amber-400 px-3 py-1 text-xs font-bold uppercase tracking-wider text-slate-900">
             Featured
           </span>
-          <h1 className="relative line-clamp-2 pb-1 font-serif text-3xl font-black leading-[1.25] text-white md:text-4xl">
+          <h1 className="relative line-clamp-2 overflow-hidden pb-1 font-serif text-3xl font-black leading-[1.25] text-white md:text-4xl">
             {hero.title}
           </h1>
           <p className="relative text-sm text-white/80">by {hero.author}</p>
-          <p className="relative line-clamp-3 text-sm text-white/90">{hero.synopsis}</p>
+          <p className="relative line-clamp-3 overflow-hidden text-sm text-white/90">{stripHtml(hero.synopsis)}</p>
           <div className="relative flex flex-wrap gap-2">
             {hero.genres.map((g) => (
               <span key={g} className="rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">{g}</span>

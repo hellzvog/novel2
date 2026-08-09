@@ -38,7 +38,7 @@ export default function Header() {
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-md">
             <BookOpen size={20} />
           </span>
-          <span className="hidden font-serif text-xl font-bold tracking-tight text-slate-900 dark:text-white sm:inline">
+          <span className="font-serif text-lg font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl">
             Add<span className="text-amber-500">Novel</span>
           </span>
         </button>
