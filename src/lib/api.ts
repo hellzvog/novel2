@@ -28,6 +28,9 @@ export interface Novel {
   coverHue: number;
   coverUrl: string | null;
   chapters: Chapter[];
+  chapterCount: number;
+  latestChapterNumber: number | null;
+  latestChapterAt: string | null;
   featured: boolean;
   featuredAt: string | null;
   popular: boolean;
@@ -139,7 +142,13 @@ interface ChapterRow {
   publish_at: string | null;
 }
 
-function mapNovel(row: NovelRow, chapters: Chapter[] = []): Novel {
+interface NovelStats {
+  chapterCount: number;
+  latestChapterNumber: number | null;
+  latestChapterAt: string | null;
+}
+
+function mapNovel(row: NovelRow, chapters: Chapter[] = [], stats?: NovelStats): Novel {
   return {
     id: row.id,
     slug: row.slug,
@@ -155,6 +164,9 @@ function mapNovel(row: NovelRow, chapters: Chapter[] = []): Novel {
     coverHue: row.cover_hue,
     coverUrl: row.cover_url ?? null,
     chapters,
+    chapterCount: stats?.chapterCount ?? chapters.length,
+    latestChapterNumber: stats?.latestChapterNumber ?? (chapters.length > 0 ? chapters[chapters.length - 1].number : null),
+    latestChapterAt: stats?.latestChapterAt ?? (chapters.length > 0 ? chapters[chapters.length - 1].publishedAt : null),
     featured: row.featured ?? false,
     featuredAt: row.featured_at ?? null,
     popular: row.popular ?? false,
@@ -280,6 +292,57 @@ export async function autoPublishChapters(): Promise<void> {
   }
 }
 
+async function fetchPublishedStats(novelIds: string[]): Promise<Map<string, NovelStats>> {
+  const stats = new Map<string, NovelStats>();
+  if (novelIds.length === 0) return stats;
+  const { data, error } = await supabase
+    .from("chapters")
+    .select("novel_id, number, published_at")
+    .eq("published", true)
+    .in("novel_id", novelIds)
+    .order("number", { ascending: true });
+  if (error) throw error;
+  for (const row of data ?? []) {
+    const id = row.novel_id as string;
+    const existing = stats.get(id);
+    if (existing) {
+      existing.chapterCount++;
+      if ((row.number as number) > (existing.latestChapterNumber ?? 0)) {
+        existing.latestChapterNumber = row.number as number;
+        existing.latestChapterAt = row.published_at ?? null;
+      }
+    } else {
+      stats.set(id, { chapterCount: 1, latestChapterNumber: row.number as number, latestChapterAt: row.published_at ?? null });
+    }
+  }
+  return stats;
+}
+
+async function fetchAllStats(novelIds: string[]): Promise<Map<string, NovelStats>> {
+  const stats = new Map<string, NovelStats>();
+  if (novelIds.length === 0) return stats;
+  const { data, error } = await supabase
+    .from("chapters")
+    .select("novel_id, number, published_at")
+    .in("novel_id", novelIds)
+    .order("number", { ascending: true });
+  if (error) throw error;
+  for (const row of data ?? []) {
+    const id = row.novel_id as string;
+    const existing = stats.get(id);
+    if (existing) {
+      existing.chapterCount++;
+      if ((row.number as number) > (existing.latestChapterNumber ?? 0)) {
+        existing.latestChapterNumber = row.number as number;
+        existing.latestChapterAt = row.published_at ?? null;
+      }
+    } else {
+      stats.set(id, { chapterCount: 1, latestChapterNumber: row.number as number, latestChapterAt: row.published_at ?? null });
+    }
+  }
+  return stats;
+}
+
 export async function listNovels(): Promise<Novel[]> {
   await autoPublishChapters();
   const { data, error } = await supabase
@@ -287,7 +350,9 @@ export async function listNovels(): Promise<Novel[]> {
     .select(NOVEL_SELECT)
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []).map((n) => mapNovel(n as unknown as NovelRow));
+  const rows = data ?? [];
+  const stats = await fetchPublishedStats(rows.map((n) => n.id));
+  return rows.map((n) => mapNovel(n as unknown as NovelRow, [], stats.get(n.id)));
 }
 
 export async function listFeaturedNovels(limit = 6): Promise<Novel[]> {
@@ -299,7 +364,9 @@ export async function listFeaturedNovels(limit = 6): Promise<Novel[]> {
     .order("featured_at", { ascending: false })
     .limit(limit);
   if (error) throw error;
-  return (data ?? []).map((n) => mapNovel(n as unknown as NovelRow));
+  const rows = data ?? [];
+  const stats = await fetchPublishedStats(rows.map((n) => n.id));
+  return rows.map((n) => mapNovel(n as unknown as NovelRow, [], stats.get(n.id)));
 }
 
 export async function listPopularNovels(limit = 12): Promise<Novel[]> {
@@ -311,7 +378,9 @@ export async function listPopularNovels(limit = 12): Promise<Novel[]> {
     .order("popular_at", { ascending: false })
     .limit(limit);
   if (error) throw error;
-  return (data ?? []).map((n) => mapNovel(n as unknown as NovelRow));
+  const rows = data ?? [];
+  const stats = await fetchPublishedStats(rows.map((n) => n.id));
+  return rows.map((n) => mapNovel(n as unknown as NovelRow, [], stats.get(n.id)));
 }
 
 export async function getNovel(slug: string): Promise<Novel | null> {
@@ -324,7 +393,8 @@ export async function getNovel(slug: string): Promise<Novel | null> {
   if (error) throw error;
   if (!data) return null;
   const chapters = await listChapters(slug);
-  return mapNovel(data as unknown as NovelRow, chapters);
+  const stats = await fetchPublishedStats([data.id]);
+  return mapNovel(data as unknown as NovelRow, chapters, stats.get(data.id));
 }
 
 export async function getNovelAdmin(slug: string): Promise<Novel | null> {
@@ -336,7 +406,8 @@ export async function getNovelAdmin(slug: string): Promise<Novel | null> {
   if (error) throw error;
   if (!data) return null;
   const chapters = await listChaptersAdmin(slug);
-  return mapNovel(data as unknown as NovelRow, chapters);
+  const stats = await fetchAllStats([data.id]);
+  return mapNovel(data as unknown as NovelRow, chapters, stats.get(data.id));
 }
 
 export async function getNovelById(id: string): Promise<Novel | null> {
@@ -348,7 +419,8 @@ export async function getNovelById(id: string): Promise<Novel | null> {
   if (error) throw error;
   if (!data) return null;
   const chapters = await listChaptersAdmin(data.slug);
-  return mapNovel(data as unknown as NovelRow, chapters);
+  const stats = await fetchAllStats([data.id]);
+  return mapNovel(data as unknown as NovelRow, chapters, stats.get(data.id));
 }
 
 export interface NovelFilters {
@@ -406,7 +478,9 @@ export async function searchNovels(filters: NovelFilters): Promise<{ novels: Nov
   const { data, error, count } = await query;
   if (error) throw error;
 
-  const novels = (data ?? []).map((n) => mapNovel(n as unknown as NovelRow));
+  const rows = data ?? [];
+  const stats = await fetchPublishedStats(rows.map((n) => n.id));
+  const novels = rows.map((n) => mapNovel(n as unknown as NovelRow, [], stats.get(n.id)));
 
   return { novels, total: count ?? novels.length };
 }
@@ -608,8 +682,22 @@ export function formatViews(views: number): string {
 }
 
 export function latestUpdateLabel(novel: Novel): string {
-  const last = novel.chapters[novel.chapters.length - 1];
-  return last ? `Ch. ${last.number}` : "—";
+  return novel.latestChapterNumber != null ? `Ch. ${novel.latestChapterNumber}` : "—";
+}
+
+export function latestUpdateTime(novel: Novel): string {
+  return novel.latestChapterAt ?? "—";
+}
+
+export async function listNovelsAdmin(): Promise<Novel[]> {
+  const { data, error } = await supabase
+    .from("novels")
+    .select(NOVEL_SELECT)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  const rows = data ?? [];
+  const stats = await fetchAllStats(rows.map((n) => n.id));
+  return rows.map((n) => mapNovel(n as unknown as NovelRow, [], stats.get(n.id)));
 }
 
 export async function relatedNovels(novel: Novel, limit = 6): Promise<Novel[]> {
