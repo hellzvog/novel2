@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Loader2, FileX2, Settings, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, FileX2, Settings, X, Moon, Sun } from "lucide-react";
 import { getChapter, incrementViews, decodeEntities, type Novel, type Chapter } from "../lib/api";
+import { useTheme } from "../lib/theme";
 import { useRouter } from "../lib/router";
 import { useJsonLd, buildChapterJsonLd, buildBreadcrumbJsonLd } from "../lib/jsonld";
 import { useSeo } from "../lib/seo";
@@ -29,6 +30,7 @@ const FONT_FAMILY: Record<string, string> = {
 
 export default function ChapterReaderPage({ slug, chapter }: { slug: string; chapter: number }) {
   const { navigate } = useRouter();
+  const { theme, toggle } = useTheme();
   const [novel, setNovel] = useState<Novel | null>(null);
   const [currentChapter, setCurrentChapter] = useState<Chapter | null>(null);
   const [loading, setLoading] = useState(true);
@@ -169,7 +171,14 @@ export default function ChapterReaderPage({ slug, chapter }: { slug: string; cha
         </div>
 
         {/* Reader settings toolbar */}
-        <div className="mb-6 flex justify-end">
+        <div className="mb-6 flex items-center justify-end gap-2">
+          <button
+            onClick={toggle}
+            aria-label="Toggle theme"
+            className="rounded-lg border border-slate-200 p-2 text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+          >
+            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
           <button
             onClick={() => setShowSettings((v) => !v)}
             className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
