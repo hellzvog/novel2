@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Plus, Search, Pencil, Trash2, Loader2, AlertCircle, FileText } from "lucide-react";
-import { listNovels, deleteNovel, formatViews, type Novel } from "../../lib/api";
+import { listNovelsAdmin, deleteNovel, formatViews, totalChapterCount, type Novel } from "../../lib/api";
 import { useRouter } from "../../lib/router";
 import AdminLayout from "../../components/admin/AdminLayout";
 
@@ -16,7 +16,7 @@ export default function AdminNovelsPage() {
   const load = async () => {
     try {
       setLoading(true);
-      const data = await listNovels();
+      const data = await listNovelsAdmin();
       setNovels(data);
       setFiltered(data);
       setError(null);
@@ -109,7 +109,7 @@ export default function AdminNovelsPage() {
                       "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
                     }`}>{n.status}</span>
                   </td>
-                  <td className="hidden px-4 py-3 text-sm text-slate-600 sm:table-cell dark:text-slate-300">{n.chapters.length}</td>
+                  <td className="hidden px-4 py-3 text-sm text-slate-600 sm:table-cell dark:text-slate-300">{totalChapterCount(n)}</td>
                   <td className="hidden px-4 py-3 text-sm text-slate-600 lg:table-cell dark:text-slate-300">{formatViews(n.views)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">

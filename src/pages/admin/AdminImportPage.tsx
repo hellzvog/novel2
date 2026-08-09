@@ -17,10 +17,11 @@ import {
 import mammoth from "mammoth";
 import JSZip from "jszip";
 import {
-  listNovels,
+  listNovelsAdmin,
   getNovelAdmin,
   createChapter,
   updateChapter,
+  totalChapterCount,
   type Novel,
 } from "../../lib/api";
 import { Calendar, Zap, Clock } from "lucide-react";
@@ -100,7 +101,7 @@ export default function AdminImportPage() {
   const multiTxtInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    listNovels().then((n) => setNovels(n)).catch(() => {});
+    listNovelsAdmin().then((n) => setNovels(n)).catch(() => {});
   }, []);
 
   const selectedNovelData = novels.find((n) => n.slug === selectedNovel);
@@ -554,7 +555,7 @@ export default function AdminImportPage() {
         >
           <option value="">— Choose a novel —</option>
           {novels.map((n) => (
-            <option key={n.id} value={n.slug}>{n.title} ({n.chapters.length} chapters)</option>
+            <option key={n.id} value={n.slug}>{n.title} ({totalChapterCount(n)} chapters)</option>
           ))}
         </select>
       </div>

@@ -280,6 +280,49 @@ export async function autoPublishChapters(): Promise<void> {
   }
 }
 
+const CHAPTER_COUNT_SELECT = "novel_id, number, title, published_at, status, published, publish_at";
+
+async function fetchPublishedChaptersForNovels(novelIds: string[]): Promise<Map<string, Chapter[]>> {
+  const map = new Map<string, Chapter[]>();
+  if (novelIds.length === 0) return map;
+  for (let i = 0; i < novelIds.length; i += 100) {
+    const batch = novelIds.slice(i, i + 100);
+    const { data, error } = await supabase
+      .from("chapters")
+      .select(CHAPTER_COUNT_SELECT)
+      .in("novel_id", batch)
+      .eq("published", true)
+      .order("number", { ascending: true });
+    if (error) throw error;
+    for (const row of data ?? []) {
+      const arr = map.get(row.novel_id) ?? [];
+      arr.push(mapChapter(row as unknown as ChapterRow));
+      map.set(row.novel_id, arr);
+    }
+  }
+  return map;
+}
+
+async function fetchAllChaptersForNovels(novelIds: string[]): Promise<Map<string, Chapter[]>> {
+  const map = new Map<string, Chapter[]>();
+  if (novelIds.length === 0) return map;
+  for (let i = 0; i < novelIds.length; i += 100) {
+    const batch = novelIds.slice(i, i + 100);
+    const { data, error } = await supabase
+      .from("chapters")
+      .select(CHAPTER_COUNT_SELECT)
+      .in("novel_id", batch)
+      .order("number", { ascending: true });
+    if (error) throw error;
+    for (const row of data ?? []) {
+      const arr = map.get(row.novel_id) ?? [];
+      arr.push(mapChapter(row as unknown as ChapterRow));
+      map.set(row.novel_id, arr);
+    }
+  }
+  return map;
+}
+
 export async function listNovels(): Promise<Novel[]> {
   await autoPublishChapters();
   const { data, error } = await supabase
@@ -287,7 +330,9 @@ export async function listNovels(): Promise<Novel[]> {
     .select(NOVEL_SELECT)
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []).map((n) => mapNovel(n as unknown as NovelRow));
+  const rows = (data ?? []) as unknown as NovelRow[];
+  const chMap = await fetchPublishedChaptersForNovels(rows.map((r) => r.id));
+  return rows.map((n) => mapNovel(n, chMap.get(n.id) ?? []));
 }
 
 export async function listFeaturedNovels(limit = 6): Promise<Novel[]> {
@@ -299,7 +344,9 @@ export async function listFeaturedNovels(limit = 6): Promise<Novel[]> {
     .order("featured_at", { ascending: false })
     .limit(limit);
   if (error) throw error;
-  return (data ?? []).map((n) => mapNovel(n as unknown as NovelRow));
+  const rows = (data ?? []) as unknown as NovelRow[];
+  const chMap = await fetchPublishedChaptersForNovels(rows.map((r) => r.id));
+  return rows.map((n) => mapNovel(n, chMap.get(n.id) ?? []));
 }
 
 export async function listPopularNovels(limit = 12): Promise<Novel[]> {
@@ -311,7 +358,28 @@ export async function listPopularNovels(limit = 12): Promise<Novel[]> {
     .order("popular_at", { ascending: false })
     .limit(limit);
   if (error) throw error;
-  return (data ?? []).map((n) => mapNovel(n as unknown as NovelRow));
+  const rows = (data ?? []) as unknown as NovelRow[];
+  const chMap = await fetchPublishedChaptersForNovels(rows.map((r) => r.id));
+  return rows.map((n) => mapNovel(n, chMap.get(n.id) ?? []));
+}
+
+export async function listNovelsAdmin(): Promise<Novel[]> {
+  const { data, error } = await supabase
+    .from("novels")
+    .select(NOVEL_SELECT)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  const rows = (data ?? []) as unknown as NovelRow[];
+  const chMap = await fetchAllChaptersForNovels(rows.map((r) => r.id));
+  return rows.map((n) => mapNovel(n, chMap.get(n.id) ?? []));
+}
+
+export function publishedChapterCount(novel: Novel): number {
+  return novel.chapters.filter((c) => c.published).length;
+}
+
+export function totalChapterCount(novel: Novel): number {
+  return novel.chapters.length;
 }
 
 export async function getNovel(slug: string): Promise<Novel | null> {
