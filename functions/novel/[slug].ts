@@ -19,6 +19,7 @@ const SITE_NAME = "AddNovel";
 const SITE_DESCRIPTION =
   "Read thousands of English translated web novels for free on AddNovel.";
 const DEFAULT_OG_IMAGE = "/og-default.svg";
+const CANONICAL_ORIGIN = "https://addnovel.com";
 
 function escapeAttr(s: string): string {
   return s
@@ -121,18 +122,22 @@ function injectMeta(html: string, metaTags: string): string {
 
 export const onRequest: PagesFunction<Env> = async (context) => {
   const env = context.env;
-  const origin = new URL(context.request.url).origin;
 
   const assetResponse = await context.env.ASSETS.fetch(
     new Request(new URL("/", context.request.url)),
   );
   const html = await assetResponse.text();
 
-  const spaResponse = () =>
-    new Response(html, {
-      status: 200,
-      headers: { "Content-Type": "text/html; charset=utf-8" },
+  const buildResponse = (body: string): Response => {
+    const headers = new Headers(assetResponse.headers);
+    headers.set("Content-Type", "text/html; charset=utf-8");
+    return new Response(body, {
+      status: assetResponse.status,
+      statusText: assetResponse.statusText,
+      headers,
     });
+  };
+  const spaResponse = () => buildResponse(html);
 
   const baseUrl = env.VITE_SUPABASE_URL || env.SUPABASE_URL || "";
   const anonKey = env.VITE_SUPABASE_ANON_KEY || env.SUPABASE_ANON_KEY || "";
@@ -150,11 +155,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const novel = rows?.[0];
     if (!novel) return spaResponse();
 
-    const modified = injectMeta(html, buildNovelMeta(novel, origin));
-    return new Response(modified, {
-      status: 200,
-      headers: { "Content-Type": "text/html; charset=utf-8" },
-    });
+    const modified = injectMeta(html, buildNovelMeta(novel, CANONICAL_ORIGIN));
+    return buildResponse(modified);
   } catch {
     return spaResponse();
   }
