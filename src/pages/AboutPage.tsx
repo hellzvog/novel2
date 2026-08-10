@@ -47,7 +47,7 @@ export default function AboutPage() {
       <p>
         Questions, feedback, and partnership inquiries are welcome. Visit our <a href="/contact">Contact</a>
         page for the appropriate email address, or write to us at{" "}
-        <a href="mailto:hello@addnovel.com">hello@addnovel.com</a>.
+        <a href="mailto:hello@addnovel.com">contactus@addnovel.com</a>.
       </p>
 
       <div className="mt-10 grid gap-4 sm:grid-cols-2">
