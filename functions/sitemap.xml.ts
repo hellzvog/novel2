@@ -72,6 +72,9 @@ async function buildSitemap(baseUrl: string, anonKey: string): Promise<string> {
   urls.push(
     `  <url>\n    <loc>${ORIGIN}/search</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>`
   );
+  urls.push(
+    `  <url>\n    <loc>${ORIGIN}/latest</loc>\n    <changefreq>hourly</changefreq>\n    <priority>0.9</priority>\n  </url>`
+  );
 
   for (const p of [
     { path: "/about", freq: "monthly", priority: "0.5" },
