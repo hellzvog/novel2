@@ -71,7 +71,7 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
     editorProps: {
       attributes: {
         class: "tiptap-editor-content outline-none",
-        style: `min-height: ${minHeight}px`,
+        style: `min-height: ${minHeight}px; max-height: ${minHeight}px; overflow-y: auto;`,
       },
     },
     onUpdate: ({ editor }) => {
