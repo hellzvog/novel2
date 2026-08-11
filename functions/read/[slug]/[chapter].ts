@@ -10,12 +10,15 @@ interface NovelRow {
   id: string;
   slug: string;
   title: string;
+  author: string;
   cover_url: string | null;
 }
 
 interface ChapterRow {
   id: string;
   number: number;
+  title: string;
+  published_at: string;
 }
 
 const SITE_NAME = "AddNovel";
@@ -40,6 +43,34 @@ function resolveImage(
     return `${origin}${coverUrl.startsWith("/") ? "" : "/"}${coverUrl}`;
   }
   return `${origin}${DEFAULT_OG_IMAGE}`;
+}
+
+function safeJsonLd(obj: Record<string, unknown>): string {
+  return JSON.stringify(obj)
+    .replace(/</g, "\u003c")
+    .replace(/>/g, "\u003e")
+    .replace(/&/g, "\u0026");
+}
+
+function buildChapterJsonLd(
+  novel: NovelRow,
+  chapter: ChapterRow,
+  origin: string,
+): string {
+  const obj: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: chapter.title,
+    author: { "@type": "Person", name: novel.author },
+    datePublished: chapter.published_at || undefined,
+    isPartOf: {
+      "@type": "Book",
+      name: novel.title,
+      url: `${origin}/novel/${encodeURIComponent(novel.slug)}`,
+    },
+    url: `${origin}/read/${encodeURIComponent(novel.slug)}/${chapter.number}`,
+  };
+  return `<script type="application/ld+json">${safeJsonLd(obj)}</script>`;
 }
 
 async function supabaseFetch<T>(
@@ -81,7 +112,7 @@ function buildChapterMeta(
   ].join("\n    ");
 }
 
-function injectMeta(html: string, metaTags: string): string {
+function injectMeta(html: string, metaTags: string, jsonLd?: string): string {
   let out = html;
   out = out.replace(/<title>[\s\S]*?<\/title>/gi, "");
   out = out.replace(
@@ -100,7 +131,14 @@ function injectMeta(html: string, metaTags: string): string {
     /<meta\s+[^>]*?name\s*=\s*["']twitter:(?:card|title|description|image)["'][^>]*>/gi,
     "",
   );
-  return out.replace(/<\/head>/i, `    ${metaTags}\n  </head>`);
+  if (jsonLd) {
+    out = out.replace(
+      /<script\s+type=["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>/gi,
+      (m) => (/@type"\s*:\s*"Article"/.test(m) ? "" : m),
+    );
+  }
+  const inject = jsonLd ? `${metaTags}\n    ${jsonLd}` : metaTags;
+  return out.replace(/<\/head>/i, `    ${inject}\n  </head>`);
 }
 
 export const onRequest: PagesFunction<Env> = async (context) => {
@@ -152,7 +190,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const novels = await supabaseFetch<NovelRow[]>(
       baseUrl,
       anonKey,
-      `/rest/v1/novels?select=id,slug,title,cover_url&slug=eq.${encodeURIComponent(slug)}`,
+      `/rest/v1/novels?select=id,slug,title,author,cover_url&slug=eq.${encodeURIComponent(slug)}`,
     );
     const novel = novels?.[0];
     if (!novel) return spaResponse();
@@ -160,11 +198,18 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const chapters = await supabaseFetch<ChapterRow[]>(
       baseUrl,
       anonKey,
-      `/rest/v1/chapters?select=id,number&novel_id=eq.${encodeURIComponent(novel.id)}&number=eq.${chapterNum}&published=eq.true`,
+      `/rest/v1/chapters?select=id,number,title,published_at&novel_id=eq.${encodeURIComponent(novel.id)}&number=eq.${chapterNum}&published=eq.true`,
     );
     if (!chapters || chapters.length === 0) return spaResponse();
 
-    const modified = injectMeta(html, buildChapterMeta(novel, chapterNum, CANONICAL_ORIGIN));
+    const metaTags = buildChapterMeta(novel, chapterNum, CANONICAL_ORIGIN);
+    let jsonLd: string | undefined;
+    try {
+      jsonLd = buildChapterJsonLd(novel, { number: chapterNum, title: chapters[0].title, published_at: chapters[0].published_at }, CANONICAL_ORIGIN);
+    } catch {
+      // JSON-LD failure: return meta-only HTML
+    }
+    const modified = injectMeta(html, metaTags, jsonLd);
     return buildResponse(modified);
   } catch {
     return spaResponse();

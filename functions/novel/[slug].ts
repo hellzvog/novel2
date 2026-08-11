@@ -63,6 +63,27 @@ function resolveImage(
   return `${origin}${DEFAULT_OG_IMAGE}`;
 }
 
+function safeJsonLd(obj: Record<string, unknown>): string {
+  return JSON.stringify(obj)
+    .replace(/</g, "\u003c")
+    .replace(/>/g, "\u003e")
+    .replace(/&/g, "\u0026");
+}
+
+function buildNovelJsonLd(novel: NovelRow, origin: string): string {
+  const obj: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "Book",
+    name: novel.title,
+    author: { "@type": "Person", name: novel.author },
+    description: stripHtml(novel.synopsis),
+    url: `${origin}/novel/${encodeURIComponent(novel.slug)}`,
+    inLanguage: "en",
+  };
+  obj.image = resolveImage(novel.cover_url, origin);
+  return `<script type="application/ld+json">${safeJsonLd(obj)}</script>`;
+}
+
 async function supabaseFetch<T>(
   baseUrl: string,
   anonKey: string,
@@ -98,7 +119,7 @@ function buildNovelMeta(novel: NovelRow, origin: string): string {
   ].join("\n    ");
 }
 
-function injectMeta(html: string, metaTags: string): string {
+function injectMeta(html: string, metaTags: string, jsonLd?: string): string {
   let out = html;
   out = out.replace(/<title>[\s\S]*?<\/title>/gi, "");
   out = out.replace(
@@ -117,7 +138,14 @@ function injectMeta(html: string, metaTags: string): string {
     /<meta\s+[^>]*?name\s*=\s*["']twitter:(?:card|title|description|image)["'][^>]*>/gi,
     "",
   );
-  return out.replace(/<\/head>/i, `    ${metaTags}\n  </head>`);
+  if (jsonLd) {
+    out = out.replace(
+      /<script\s+type=["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>/gi,
+      (m) => (/@type"\s*:\s*"Book"/.test(m) ? "" : m),
+    );
+  }
+  const inject = jsonLd ? `${metaTags}\n    ${jsonLd}` : metaTags;
+  return out.replace(/<\/head>/i, `    ${inject}\n  </head>`);
 }
 
 export const onRequest: PagesFunction<Env> = async (context) => {
@@ -170,7 +198,14 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const novel = rows?.[0];
     if (!novel) return spaResponse();
 
-    const modified = injectMeta(html, buildNovelMeta(novel, CANONICAL_ORIGIN));
+    const metaTags = buildNovelMeta(novel, CANONICAL_ORIGIN);
+    let jsonLd: string | undefined;
+    try {
+      jsonLd = buildNovelJsonLd(novel, CANONICAL_ORIGIN);
+    } catch {
+      // JSON-LD failure: return meta-only HTML
+    }
+    const modified = injectMeta(html, metaTags, jsonLd);
     return buildResponse(modified);
   } catch {
     return spaResponse();
