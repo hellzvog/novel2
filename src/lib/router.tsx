@@ -6,6 +6,7 @@ export type Route =
   | { name: "reader"; slug: string; chapter: number }
   | { name: "search"; query?: string; genre?: string; status?: string }
   | { name: "favorites" }
+  | { name: "latest" }
   | { name: "about" }
   | { name: "contact" }
   | { name: "privacy" }
@@ -74,6 +75,7 @@ function parseHash(hash: string): Route | null {
     return { name: "search", query: decodeURIComponent(rest) };
   }
   if (parts[0] === "favorites") return { name: "favorites" };
+  if (parts[0] === "latest") return { name: "latest" };
   if (parts[0] === "about") return { name: "about" };
   if (parts[0] === "contact") return { name: "contact" };
   if (parts[0] === "privacy") return { name: "privacy" };
@@ -124,6 +126,7 @@ function parsePath(pathname: string, search: string): Route {
     return { name: "search" };
   }
   if (parts[0] === "favorites") return { name: "favorites" };
+  if (parts[0] === "latest") return { name: "latest" };
   if (parts[0] === "about") return { name: "about" };
   if (parts[0] === "contact") return { name: "contact" };
   if (parts[0] === "privacy") return { name: "privacy" };
@@ -167,6 +170,8 @@ function toPath(route: Route): string {
     }
     case "favorites":
       return "/favorites";
+    case "latest":
+      return "/latest";
     case "about":
       return "/about";
     case "contact":

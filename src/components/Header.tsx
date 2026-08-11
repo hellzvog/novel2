@@ -25,7 +25,7 @@ export default function Header() {
     { label: "Home", action: () => navigate({ name: "home" }) },
     { label: "Browse", action: () => navigate({ name: "search" }) },
     { label: "Favorites", action: () => navigate({ name: "favorites" }), icon: <Heart size={14} /> },
-    { label: "Latest", action: () => navigate({ name: "home" }) },
+    { label: "Latest", action: () => navigate({ name: "latest" }) },
   ];
 
   return (

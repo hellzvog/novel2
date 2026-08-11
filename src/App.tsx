@@ -12,6 +12,7 @@ import NovelDetailPage from "./pages/NovelDetailPage";
 import ChapterReaderPage from "./pages/ChapterReaderPage";
 import SearchPage from "./pages/SearchPage";
 import FavoritesPage from "./pages/FavoritesPage";
+import LatestPage from "./pages/LatestPage";
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
@@ -116,6 +117,7 @@ function Pages() {
         {route.name === "reader" && <ChapterReaderPage slug={route.slug} chapter={route.chapter} />}
         {route.name === "search" && <SearchPage initialQuery={route.query} initialGenre={route.genre} initialStatus={route.status} />}
         {route.name === "favorites" && <FavoritesPage />}
+        {route.name === "latest" && <LatestPage />}
         {route.name === "about" && <Suspense fallback={<PageLoader />}><AboutPage /></Suspense>}
         {route.name === "contact" && <Suspense fallback={<PageLoader />}><ContactPage /></Suspense>}
         {route.name === "privacy" && <Suspense fallback={<PageLoader />}><PrivacyPage /></Suspense>}
