@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { BookOpen, Eye, Play, ChevronDown, ChevronUp, Loader2, BookX, Heart, History, Clock } from "lucide-react";
 import { getNovel, relatedNovels, formatViews, decodeEntities, type Novel } from "../lib/api";
 import { sanitizeHtml, stripHtml } from "../lib/html-sanitize";
@@ -206,9 +206,14 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
         </div>
         <div className="grid gap-1 sm:grid-cols-2">
           {chapters.map((c) => (
-            <button
+            <a
               key={c.id}
-              onClick={() => navigate({ name: "reader", slug: novel.slug, chapter: c.number })}
+              href={`/read/${novel.slug}/${c.number}`}
+              onClick={(e: MouseEvent<HTMLAnchorElement>) => {
+                if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                e.preventDefault();
+                navigate({ name: "reader", slug: novel.slug, chapter: c.number });
+              }}
               className="group flex min-w-0 flex-col items-start gap-0.5 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-amber-50 dark:hover:bg-slate-700 sm:flex-row sm:items-center sm:justify-between sm:gap-2"
             >
               <span className="flex min-w-0 items-center gap-2">
@@ -216,7 +221,7 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
                 <span className="line-clamp-1 text-sm text-slate-700 group-hover:text-amber-600 dark:text-slate-300 dark:group-hover:text-amber-400">{decodeEntities(c.title)}</span>
               </span>
               <span className="shrink-0 pl-7 text-[10px] text-slate-400 sm:pl-0">{c.publishedAt}</span>
-            </button>
+            </a>
           ))}
         </div>
         {novel.chapters.length > 12 && (
