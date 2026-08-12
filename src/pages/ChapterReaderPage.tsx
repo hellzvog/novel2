@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { ChevronLeft, ChevronRight, Loader2, FileX2, Settings, X, Moon, Sun } from "lucide-react";
 import { getChapter, incrementViews, decodeEntities, listNovels, type Novel, type Chapter } from "../lib/api";
 import { useTheme } from "../lib/theme";
@@ -301,28 +301,43 @@ export default function ChapterReaderPage({ slug, chapter }: { slug: string; cha
         {/* Chapter nav */}
         <div className="mt-10 flex items-center justify-between gap-4 border-t border-slate-200 pt-6 dark:border-slate-700">
           {prevChapter ? (
-            <button
-              onClick={() => navigate({ name: "reader", slug, chapter: prevChapter.number })}
+            <a
+              href={`/read/${slug}/${prevChapter.number}`}
+              onClick={(e: MouseEvent<HTMLAnchorElement>) => {
+                if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                e.preventDefault();
+                navigate({ name: "reader", slug, chapter: prevChapter.number });
+              }}
               className="flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
             >
               <ChevronLeft size={16} /> Previous
-            </button>
+            </a>
           ) : (
             <span />
           )}
-          <button
-            onClick={() => navigate({ name: "novel", slug })}
+          <a
+            href={`/novel/${slug}`}
+            onClick={(e: MouseEvent<HTMLAnchorElement>) => {
+              if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+              e.preventDefault();
+              navigate({ name: "novel", slug });
+            }}
             className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
           >
             All Chapters
-          </button>
+          </a>
           {nextChapter ? (
-            <button
-              onClick={() => navigate({ name: "reader", slug, chapter: nextChapter.number })}
+            <a
+              href={`/read/${slug}/${nextChapter.number}`}
+              onClick={(e: MouseEvent<HTMLAnchorElement>) => {
+                if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                e.preventDefault();
+                navigate({ name: "reader", slug, chapter: nextChapter.number });
+              }}
               className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-amber-400"
             >
               Next <ChevronRight size={16} />
-            </button>
+            </a>
           ) : (
             <span />
           )}
