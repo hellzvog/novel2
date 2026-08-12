@@ -287,7 +287,7 @@ export default function ChapterReaderPage({ slug, chapter }: { slug: string; cha
         </div>
 
         {/* You May Also Like */}
-        {recommendations.length === 3 && (
+        {recommendations.length > 0 && (
           <section className="mt-12 border-t border-slate-200 pt-8 dark:border-slate-700">
             <h2 className="mb-4 font-serif text-xl font-bold text-slate-900 dark:text-white">You May Also Like</h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
