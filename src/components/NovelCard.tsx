@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, type MouseEvent } from "react";
 import { Eye, BookOpen } from "lucide-react";
 import type { Novel } from "../lib/api";
 import { formatViews, latestUpdateLabel, decodeEntities } from "../lib/api";
@@ -13,9 +13,19 @@ const statusStyles: Record<string, string> = {
 
 function NovelCardImpl({ novel }: { novel: Novel }) {
   const { navigate } = useRouter();
+
+  const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    if (e.defaultPrevented) return;
+    if (e.button !== 0) return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    navigate({ name: "novel", slug: novel.slug });
+  };
+
   return (
-    <button
-      onClick={() => navigate({ name: "novel", slug: novel.slug })}
+    <a
+      href={`/novel/${novel.slug}`}
+      onClick={handleClick}
       className="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-slate-700 dark:bg-slate-800"
     >
       <div className="relative aspect-[3/4] w-full overflow-hidden">
@@ -40,7 +50,7 @@ function NovelCardImpl({ novel }: { novel: Novel }) {
           </span>
         </div>
       </div>
-    </button>
+    </a>
   );
 }
 
