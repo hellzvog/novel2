@@ -26,7 +26,8 @@ const AdminChaptersPage = lazy(() => import("./pages/admin/AdminChaptersPage"));
 const AdminChapterEditPage = lazy(() => import("./pages/admin/AdminChapterEditPage"));
 const AdminImportPage = lazy(() => import("./pages/admin/AdminImportPage"));
 const AdminGenresPage = lazy(() => import("./pages/admin/AdminGenresPage"));
-import { Loader2 } from "lucide-react";
+import { Loader2, Compass } from "lucide-react";
+import NotFound from "./components/NotFound";
 
 function PageLoader() {
   return (
@@ -123,6 +124,9 @@ function Pages() {
         {route.name === "privacy" && <Suspense fallback={<PageLoader />}><PrivacyPage /></Suspense>}
         {route.name === "terms" && <Suspense fallback={<PageLoader />}><TermsPage /></Suspense>}
         {route.name === "dmca" && <Suspense fallback={<PageLoader />}><DmcaPage /></Suspense>}
+        {route.name === "not-found" && (
+          <NotFound icon={Compass} title="Page Not Found" message="The page you are looking for doesn't exist or has been moved." backLabel="Back to Home" backRoute={{ name: "home" }} />
+        )}
       </main>
       {!isReader && <Footer />}
     </div>

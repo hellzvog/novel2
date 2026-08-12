@@ -19,7 +19,8 @@ export type Route =
   | { name: "admin-chapters"; slug: string }
   | { name: "admin-chapter-edit"; slug: string; chapter?: number }
   | { name: "admin-import" }
-  | { name: "admin-genres" };
+  | { name: "admin-genres" }
+  | { name: "not-found" };
 
 interface RouterValue {
   route: Route;
@@ -149,7 +150,7 @@ function parsePath(pathname: string, search: string): Route {
     if (parts[1] === "genres") return { name: "admin-genres" };
     return { name: "admin" };
   }
-  return { name: "home" };
+  return { name: "not-found" };
 }
 
 function toPath(route: Route): string {
@@ -198,6 +199,8 @@ function toPath(route: Route): string {
       return "/admin/import";
     case "admin-genres":
       return "/admin/genres";
+    case "not-found":
+      return "/";
   }
 }
 
