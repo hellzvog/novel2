@@ -96,9 +96,14 @@ export default function LatestPage() {
           {novels.map((n) => {
             const last = n.chapters[n.chapters.length - 1];
             return (
-              <button
+              <a
                 key={n.id}
-                onClick={() => navigate({ name: "novel", slug: n.slug })}
+                href={`/novel/${n.slug}`}
+                onClick={(e) => {
+                  if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                  e.preventDefault();
+                  navigate({ name: "novel", slug: n.slug });
+                }}
                 className="group flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 text-left transition-all hover:border-amber-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-amber-700"
               >
                 <Cover title={n.title} hue={n.coverHue} coverUrl={n.coverUrl} className="h-16 w-12 shrink-0" />
@@ -111,7 +116,7 @@ export default function LatestPage() {
                   </p>
                 </div>
                 <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300">{n.status}</span>
-              </button>
+              </a>
             );
           })}
         </div>
