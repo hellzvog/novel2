@@ -89,8 +89,8 @@ export default function HomePage() {
   const latest = [...novels]
     .filter((n) => n.chapters.length > 0)
     .sort((a, b) => {
-      const al = a.chapters[a.chapters.length - 1]?.publishedAt ?? "";
-      const bl = b.chapters[b.chapters.length - 1]?.publishedAt ?? "";
+      const al = effectivePubAt(a.chapters[a.chapters.length - 1]);
+      const bl = effectivePubAt(b.chapters[b.chapters.length - 1]);
       return bl.localeCompare(al);
     })
     .slice(0, 12);
@@ -154,7 +154,7 @@ export default function HomePage() {
                 <div className="min-w-0 flex-1">
                   <h3 className="truncate text-sm font-semibold text-slate-900 group-hover:text-amber-600 dark:text-slate-100 dark:group-hover:text-amber-400">{n.title}</h3>
                   <p className="truncate text-xs text-slate-500 dark:text-slate-400">{n.author}</p>
-                  <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">{latestUpdateLabel(n)} · {timeAgoDate(last.publishedAt)}</p>
+                  <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">{latestUpdateLabel(n)} · {timeAgoDate(effectivePubAt(last))}</p>
                 </div>
                 <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300">{n.status}</span>
               </button>
@@ -340,6 +340,10 @@ function timeAgo(ts: number): string {
   const d = Math.floor(h / 24);
   if (d < 7) return `${d}d ago`;
   return new Date(ts).toLocaleDateString();
+}
+
+function effectivePubAt(ch: { publishAt: string | null; publishedAt: string }): string {
+  return ch.publishAt ?? ch.publishedAt;
 }
 
 function timeAgoDate(dateStr: string): string {
