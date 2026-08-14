@@ -17,10 +17,14 @@ export default function SearchPage({ initialQuery, initialGenre, initialStatus }
   const [status, setStatus] = useState<NovelStatus | "All">((initialStatus as NovelStatus) ?? "All");
 
   const seoPath = initialGenre ? `/search?genre=${encodeURIComponent(initialGenre)}` : "/search";
+  const hasQuery = !!(initialQuery && initialQuery.trim());
+  const hasStatus = !!initialStatus;
+  const seoRobots = hasQuery || hasStatus ? "noindex-follow" : "index";
   useSeo({
     title: initialGenre ? `${initialGenre} Novels - AddNovel` : initialQuery ? `Search Novels - AddNovel` : "Browse Novels - AddNovel",
     description: initialGenre ? `Browse the best ${initialGenre} novels online on AddNovel.` : "Search thousands of novels on AddNovel.",
     path: seoPath,
+    robots: seoRobots,
   });
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<"popular" | "latest">("popular");

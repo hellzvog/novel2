@@ -30,7 +30,7 @@ export function buildUrl(path: string): string {
 /** Default Open Graph image (1200x630 PNG). */
 export const DEFAULT_OG_IMAGE = "/og-default.svg";
 
-type RobotsMode = "index" | "noindex";
+type RobotsMode = "index" | "noindex" | "noindex-follow";
 
 interface SeoOptions {
   title: string;
@@ -82,7 +82,10 @@ export function useSeo(opts: SeoOptions) {
     const image = opts.image ? (opts.image.startsWith("http") ? opts.image : buildUrl(opts.image)) : buildUrl(DEFAULT_OG_IMAGE);
     const title = opts.title;
     const description = opts.description || SITE_DESCRIPTION;
-    const robots = opts.robots === "noindex" ? "noindex, nofollow" : "index, follow";
+    const robots =
+      opts.robots === "noindex" ? "noindex, nofollow"
+      : opts.robots === "noindex-follow" ? "noindex, follow"
+      : "index, follow";
 
     document.title = title;
 
