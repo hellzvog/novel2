@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Save, Loader2, AlertCircle, Calendar, Zap, Clock } from "lucide-react";
 import { getNovelAdmin, getChapterAdmin, createChapter, updateChapter, type Novel, type Chapter } from "../../lib/api";
 import { sanitizeHtml, contentArrayToEditorHtml, editorHtmlToContentArray } from "../../lib/html-sanitize";
@@ -51,6 +51,13 @@ export default function AdminChapterEditPage({ slug, chapter }: { slug: string; 
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const wordCount = useMemo(() => {
+    if (!content) return 0;
+    const text = content.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/&[a-z]+;/g, " ");
+    const trimmed = text.replace(/\s+/g, " ").trim();
+    return trimmed ? trimmed.split(" ").length : 0;
+  }, [content]);
 
   useEffect(() => {
     (async () => {
@@ -272,6 +279,9 @@ export default function AdminChapterEditPage({ slug, chapter }: { slug: string; 
               placeholder="Write or paste chapter content here..."
               minHeight={400}
             />
+            <p className="mt-1.5 text-xs text-slate-400">
+              Word Count: {wordCount.toLocaleString()}
+            </p>
           </div>
         </div>
       </div>
