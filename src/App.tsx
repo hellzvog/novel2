@@ -4,6 +4,7 @@ import { ThemeProvider } from "./lib/theme";
 import { AdminAuthProvider, useAdminAuth } from "./lib/admin-auth";
 import { AdSenseProvider, useAdSense } from "./lib/adsense";
 import { useSeo } from "./lib/seo";
+import { trackPageView } from "./lib/analytics";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -65,6 +66,11 @@ function Pages() {
   useEffect(() => {
     recordNavigation();
   }, [route, recordNavigation]);
+
+  // GA4 SPA pageview tracking — one page_view per route change.
+  useEffect(() => {
+    trackPageView();
+  }, [route]);
 
   // Redirect to login if accessing admin routes without auth
   useEffect(() => {
