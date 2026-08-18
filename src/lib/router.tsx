@@ -5,6 +5,7 @@ export type Route =
   | { name: "novel"; slug: string }
   | { name: "reader"; slug: string; chapter: number }
   | { name: "search"; query?: string; genre?: string; status?: string }
+  | { name: "genre"; slug: string }
   | { name: "favorites" }
   | { name: "latest" }
   | { name: "about" }
@@ -75,6 +76,7 @@ function parseHash(hash: string): Route | null {
     }
     return { name: "search", query: decodeURIComponent(rest) };
   }
+  if (parts[0] === "genre" && parts[1]) return { name: "genre", slug: parts[1] };
   if (parts[0] === "favorites") return { name: "favorites" };
   if (parts[0] === "latest") return { name: "latest" };
   if (parts[0] === "about") return { name: "about" };
@@ -126,6 +128,7 @@ function parsePath(pathname: string, search: string): Route {
     }
     return { name: "search" };
   }
+  if (parts[0] === "genre" && parts[1]) return { name: "genre", slug: parts[1] };
   if (parts[0] === "favorites") return { name: "favorites" };
   if (parts[0] === "latest") return { name: "latest" };
   if (parts[0] === "about") return { name: "about" };
@@ -169,6 +172,8 @@ function toPath(route: Route): string {
       const qs = params.toString();
       return qs ? `/search?${qs}` : "/search";
     }
+    case "genre":
+      return `/genre/${route.slug}`;
     case "favorites":
       return "/favorites";
     case "latest":

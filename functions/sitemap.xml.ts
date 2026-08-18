@@ -92,7 +92,7 @@ async function buildSitemap(baseUrl: string, anonKey: string): Promise<string> {
     const genres = await supabaseFetch<GenreRow[]>(baseUrl, anonKey, `/rest/v1/genres?select=slug`);
     for (const g of genres) {
       urls.push(
-        `  <url>\n    <loc>${ORIGIN}/search?genre=${escapeXml(encodeURIComponent(g.slug))}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>`
+        `  <url>\n    <loc>${ORIGIN}/genre/${escapeXml(g.slug)}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>`
       );
     }
   } catch { /* skip on error */ }

@@ -1,6 +1,6 @@
 import { useEffect, useState, type MouseEvent } from "react";
 import { BookOpen, Eye, Play, ChevronDown, ChevronUp, Loader2, BookX, Heart, History, Clock } from "lucide-react";
-import { getNovel, relatedNovels, formatViews, decodeEntities, type Novel } from "../lib/api";
+import { getNovel, relatedNovels, formatViews, decodeEntities, getGenres, type Novel, type Genre } from "../lib/api";
 import { sanitizeHtml, stripHtml } from "../lib/html-sanitize";
 import { useRouter } from "../lib/router";
 import Cover from "../components/Cover";
@@ -21,6 +21,15 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
   const [showAllChapters, setShowAllChapters] = useState(false);
   const [fav, setFav] = useState(false);
   const [lastChapter, setLastChapter] = useState<number | null>(null);
+  const [genreMap, setGenreMap] = useState<Map<string, Genre>>(new Map());
+
+  useEffect(() => {
+    getGenres().then((gs) => {
+      const m = new Map<string, Genre>();
+      for (const g of gs) m.set(g.name, g);
+      setGenreMap(m);
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -114,9 +123,26 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
                 novel.status === "Completed" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" :
                 "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
               }`}>{novel.status}</span>
-              {novel.genres.map((g) => (
-                <button key={g} onClick={() => navigate({ name: "search", genre: g })} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-amber-100 hover:text-amber-700 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600">{g}</button>
-              ))}
+              {novel.genres.map((g) => {
+                const genreObj = genreMap.get(g);
+                if (genreObj) {
+                  return (
+                    <a
+                      key={g}
+                      href={`/genre/${genreObj.slug}`}
+                      onClick={(e) => {
+                        if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                        e.preventDefault();
+                        navigate({ name: "genre", slug: genreObj.slug });
+                      }}
+                      className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-amber-100 hover:text-amber-700 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+                    >{g}</a>
+                  );
+                }
+                return (
+                  <span key={g} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300">{g}</span>
+                );
+              })}
             </div>
             <h1 className="font-serif text-2xl font-black leading-tight text-slate-900 dark:text-white md:text-3xl">{decodeEntities(novel.title)}</h1>
             <p className="text-sm text-slate-500 dark:text-slate-400">by <span className="font-medium text-slate-700 dark:text-slate-300">{novel.author}</span></p>
@@ -187,9 +213,26 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
         />
         {novel.genres.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">
-            {novel.genres.map((g) => (
-              <button key={g} onClick={() => navigate({ name: "search", genre: g })} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-amber-100 hover:text-amber-700 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600">{g}</button>
-            ))}
+            {novel.genres.map((g) => {
+              const genreObj = genreMap.get(g);
+              if (genreObj) {
+                return (
+                  <a
+                    key={g}
+                    href={`/genre/${genreObj.slug}`}
+                    onClick={(e) => {
+                      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                      e.preventDefault();
+                      navigate({ name: "genre", slug: genreObj.slug });
+                    }}
+                    className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-amber-100 hover:text-amber-700 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+                  >{g}</a>
+                );
+              }
+              return (
+                <span key={g} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300">{g}</span>
+              );
+            })}
           </div>
         )}
       </div>

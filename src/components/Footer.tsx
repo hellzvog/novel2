@@ -51,7 +51,15 @@ export default function Footer() {
               <ul className="grid grid-cols-2 gap-2 text-sm text-slate-500 dark:text-slate-400">
                 {genres.map((g) => (
                   <li key={g.id}>
-                    <button onClick={() => navigate({ name: "search", genre: g.name })} className="hover:text-amber-600 dark:hover:text-amber-400">{g.name}</button>
+                    <a
+                      href={`/genre/${g.slug}`}
+                      onClick={(e) => {
+                        if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                        e.preventDefault();
+                        navigate({ name: "genre", slug: g.slug });
+                      }}
+                      className="hover:text-amber-600 dark:hover:text-amber-400"
+                    >{g.name}</a>
                   </li>
                 ))}
               </ul>

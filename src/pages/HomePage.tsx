@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { ArrowRight, Clock, Flame, TrendingUp, Loader2, AlertCircle, ChevronRight, ChevronLeft } from "lucide-react";
-import { listNovels, listFeaturedNovels, listPopularNovels, getGenres, type Novel, formatViews, latestUpdateLabel } from "../lib/api";
+import { listNovels, listFeaturedNovels, listPopularNovels, getGenres, type Novel, type Genre, formatViews, latestUpdateLabel } from "../lib/api";
 import { useRouter } from "../lib/router";
 import NovelCard from "../components/NovelCard";
 import Section from "../components/Section";
@@ -16,7 +16,7 @@ export default function HomePage() {
   const [novels, setNovels] = useState<Novel[]>([]);
   const [featuredNovels, setFeaturedNovels] = useState<Novel[]>([]);
   const [popularNovels, setPopularNovels] = useState<Novel[]>([]);
-  const [genres, setGenres] = useState<string[]>([]);
+  const [genres, setGenres] = useState<Genre[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,7 +38,7 @@ export default function HomePage() {
         setNovels(n);
         setFeaturedNovels(f);
         setPopularNovels(p);
-        setGenres(g.map((x) => x.name));
+        setGenres(g);
         const validIds = new Set(n.map((nv) => nv.id));
         const stored = pruneReadingHistory(validIds);
         const byId = new Map(n.map((nv) => [nv.id, nv]));
@@ -190,14 +190,19 @@ export default function HomePage() {
       <Section title="Browse by Genre">
         <div className="flex flex-wrap gap-2">
           {genres.map((g) => (
-            <button
-              key={g}
-              onClick={() => navigate({ name: "search", genre: g })}
+            <a
+              key={g.id}
+              href={`/genre/${g.slug}`}
+              onClick={(e) => {
+                if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                e.preventDefault();
+                navigate({ name: "genre", slug: g.slug });
+              }}
               className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-all hover:border-amber-400 hover:bg-amber-50 hover:text-amber-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-amber-600 dark:hover:bg-slate-700 dark:hover:text-amber-400"
             >
               <TrendingUp size={14} className="text-amber-500" />
-              {g}
-            </button>
+              {g.name}
+            </a>
           ))}
         </div>
       </Section>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Search, SlidersHorizontal, X, Loader2, AlertCircle } from "lucide-react";
-import { searchNovels, getGenres, type Novel, type NovelStatus } from "../lib/api";
+import { searchNovels, getGenres, type Novel, type NovelStatus, type Genre } from "../lib/api";
 import { useRouter } from "../lib/router";
 import NovelCard from "../components/NovelCard";
 import { useSeo } from "../lib/seo";
@@ -12,14 +12,26 @@ const STATUSES: (NovelStatus | "All")[] = ["All", "Ongoing", "Completed", "Hiatu
 export default function SearchPage({ initialQuery, initialGenre, initialStatus }: { initialQuery?: string; initialGenre?: string; initialStatus?: string }) {
   const { navigate } = useRouter();
   const [query, setQuery] = useState(initialQuery ?? "");
-  const [genres, setGenres] = useState<string[]>([]);
+  const [genres, setGenres] = useState<Genre[]>([]);
   const [genre, setGenre] = useState<string>(initialGenre ?? "All");
+  const [allGenres, setAllGenres] = useState<Genre[]>([]);
   const [status, setStatus] = useState<NovelStatus | "All">((initialStatus as NovelStatus) ?? "All");
 
-  const seoPath = initialGenre ? `/search?genre=${encodeURIComponent(initialGenre)}` : "/search";
+  // Resolve legacy genre parameter to canonical /genre/{slug} if possible.
+  const resolvedGenreSlug = useMemo(() => {
+    if (!initialGenre) return null;
+    const bySlug = allGenres.find((g) => g.slug === initialGenre);
+    if (bySlug) return bySlug.slug;
+    const byName = allGenres.find((g) => g.name === initialGenre);
+    if (byName) return byName.slug;
+    return null;
+  }, [initialGenre, allGenres]);
+
+  const seoPath = resolvedGenreSlug ? `/genre/${resolvedGenreSlug}` : "/search";
   const hasQuery = !!(initialQuery && initialQuery.trim());
   const hasStatus = !!initialStatus;
-  const seoRobots = hasQuery || hasStatus ? "noindex-follow" : "index";
+  const hasGenre = !!initialGenre;
+  const seoRobots = hasQuery || hasStatus || hasGenre ? "noindex-follow" : "index";
   useSeo({
     title: initialGenre ? `${initialGenre} Novels - AddNovel` : initialQuery ? `Search Novels - AddNovel` : "Browse Novels - AddNovel",
     description: initialGenre ? `Browse the best ${initialGenre} novels online on AddNovel.` : "Search thousands of novels on AddNovel.",
@@ -35,7 +47,7 @@ export default function SearchPage({ initialQuery, initialGenre, initialStatus }
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    getGenres().then((g) => setGenres(g.map((x) => x.name))).catch(() => {});
+    getGenres().then((g) => { setGenres(g); setAllGenres(g); }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -178,13 +190,13 @@ export default function SearchPage({ initialQuery, initialGenre, initialStatus }
                 </button>
                 {genres.map((g) => (
                   <button
-                    key={g}
-                    onClick={() => selectGenre(g)}
+                    key={g.id}
+                    onClick={() => selectGenre(g.name)}
                     className={`rounded-lg px-3 py-1.5 text-left text-sm transition-colors ${
-                      activeGenre === g ? "bg-amber-500 font-semibold text-white" : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
+                      activeGenre === g.name ? "bg-amber-500 font-semibold text-white" : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
                     }`}
                   >
-                    {g}
+                    {g.name}
                   </button>
                 ))}
               </div>

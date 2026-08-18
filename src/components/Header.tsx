@@ -2,17 +2,17 @@ import { useEffect, useState } from "react";
 import { BookOpen, Heart, Menu, Moon, Search, Sun, X } from "lucide-react";
 import { useRouter } from "../lib/router";
 import { useTheme } from "../lib/theme";
-import { getGenres } from "../lib/api";
+import { getGenres, type Genre } from "../lib/api";
 
 export default function Header() {
   const { navigate, route } = useRouter();
   const { theme, toggle } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [genres, setGenres] = useState<string[]>([]);
+  const [genres, setGenres] = useState<Genre[]>([]);
 
   useEffect(() => {
-    getGenres().then((g) => setGenres(g.map((x) => x.name))).catch(() => {});
+    getGenres().then(setGenres).catch(() => {});
   }, []);
 
   const submitSearch = (e: React.FormEvent) => {
@@ -60,13 +60,18 @@ export default function Header() {
             </button>
             <div className="invisible absolute left-0 top-full z-50 grid w-[20rem] max-w-[calc(100vw-2rem)] grid-cols-3 gap-1 rounded-xl border border-slate-200 bg-white p-3 opacity-0 shadow-xl transition-all group-hover:visible group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-800">
               {genres.map((g) => (
-                <button
-                  key={g}
-                  onClick={() => navigate({ name: "search", genre: g })}
+                <a
+                  key={g.id}
+                  href={`/genre/${g.slug}`}
+                  onClick={(e) => {
+                    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                    e.preventDefault();
+                    navigate({ name: "genre", slug: g.slug });
+                  }}
                   className="rounded-lg px-2 py-1.5 text-left text-xs text-slate-600 transition-colors hover:bg-amber-50 hover:text-amber-600 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-amber-400"
                 >
-                  {g}
-                </button>
+                  {g.name}
+                </a>
               ))}
             </div>
           </div>
@@ -129,13 +134,19 @@ export default function Header() {
           </div>
           <div className="mt-3 grid grid-cols-3 gap-1">
             {genres.map((g) => (
-              <button
-                key={g}
-                onClick={() => { navigate({ name: "search", genre: g }); setMobileOpen(false); }}
+              <a
+                key={g.id}
+                href={`/genre/${g.slug}`}
+                onClick={(e) => {
+                  if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                  e.preventDefault();
+                  navigate({ name: "genre", slug: g.slug });
+                  setMobileOpen(false);
+                }}
                 className="rounded-lg px-2 py-1.5 text-left text-xs text-slate-600 hover:bg-amber-50 dark:text-slate-300 dark:hover:bg-slate-800"
               >
-                {g}
-              </button>
+                {g.name}
+              </a>
             ))}
           </div>
         </div>
