@@ -131,7 +131,7 @@ export default function HomePage() {
       )}
 
       {/* Featured carousel */}
-      <Section title="Featured Novels" onMore={() => navigate({ name: "search" })}>
+      <Section title="Featured Novels">
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6">
           {featuredNovels.map((n) => <NovelCard key={n.id} novel={n} />)}
         </div>
@@ -140,7 +140,7 @@ export default function HomePage() {
       <AdBanner placement="home" className="my-8" />
 
       {/* Latest updates */}
-      <Section title="Latest Updates" onMore={() => navigate({ name: "search" })}>
+      <Section title="Latest Updates" onMore={() => navigate({ name: "latest" })}>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {latest.map((n) => {
             const last = n.chapters[n.chapters.length - 1];

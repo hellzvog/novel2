@@ -481,7 +481,9 @@ export async function searchNovels(filters: NovelFilters): Promise<{ novels: Nov
   const { data, error, count } = await query;
   if (error) throw error;
 
-  const novels = (data ?? []).map((n) => mapNovel(n as unknown as NovelRow));
+  const rows = (data ?? []) as unknown as NovelRow[];
+  const chMap = await fetchPublishedChaptersForNovels(rows.map((r) => r.id));
+  const novels = rows.map((n) => mapNovel(n, chMap.get(n.id) ?? []));
 
   return { novels, total: count ?? novels.length };
 }

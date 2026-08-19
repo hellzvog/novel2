@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
-import { Heart, Trash2, ArrowRight, BookOpen } from "lucide-react";
+import { Heart, Trash2, ArrowRight, Loader2 } from "lucide-react";
 import { useRouter } from "../lib/router";
-import Cover from "../components/Cover";
+import NovelCard from "../components/NovelCard";
 import Section from "../components/Section";
-import { getFavorites, removeFavorite, type FavoriteEntry } from "../lib/reader-storage";
+import { getFavorites, removeFavorite } from "../lib/reader-storage";
+import { listNovels, type Novel } from "../lib/api";
 import { useSeo } from "../lib/seo";
 
 export default function FavoritesPage() {
   const { navigate } = useRouter();
-  const [favorites, setFavorites] = useState<FavoriteEntry[]>([]);
+  const [novels, setNovels] = useState<Novel[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useSeo({
     title: "Favorites - AddNovel",
@@ -18,15 +21,58 @@ export default function FavoritesPage() {
   });
 
   useEffect(() => {
-    setFavorites(getFavorites());
+    let active = true;
+    (async () => {
+      try {
+        setLoading(true);
+        const favIds = new Set(getFavorites().map((f) => f.novelId));
+        if (favIds.size === 0) {
+          if (active) { setNovels([]); setError(null); }
+          return;
+        }
+        const all = await listNovels();
+        if (!active) return;
+        const favOrder = getFavorites();
+        const byId = new Map(all.map((n) => [n.id, n]));
+        const result: Novel[] = [];
+        for (const f of favOrder) {
+          const match = byId.get(f.novelId);
+          if (match) result.push(match);
+        }
+        setNovels(result);
+        setError(null);
+      } catch (e) {
+        if (active) setError(e instanceof Error ? e.message : "Failed to load favorites.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => { active = false; };
   }, []);
 
   const handleRemove = (novelId: string) => {
     removeFavorite(novelId);
-    setFavorites(getFavorites());
+    setNovels((prev) => prev.filter((n) => n.id !== novelId));
   };
 
-  if (favorites.length === 0) {
+  if (loading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Loader2 className="animate-spin text-amber-500" size={32} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-20 text-center">
+        <p className="text-slate-600 dark:text-slate-300">{error}</p>
+        <button onClick={() => window.location.reload()} className="mt-4 text-amber-600 hover:underline">Retry</button>
+      </div>
+    );
+  }
+
+  if (novels.length === 0) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-20 text-center">
         <Heart className="mx-auto mb-4 text-slate-300 dark:text-slate-600" size={48} />
@@ -49,40 +95,18 @@ export default function FavoritesPage() {
       <div className="mb-6 flex items-center gap-2">
         <Heart size={24} className="text-rose-500" />
         <h1 className="font-serif text-2xl font-bold text-slate-900 dark:text-white">My Favorites</h1>
-        <span className="text-sm text-slate-400">({favorites.length})</span>
+        <span className="text-sm text-slate-400">({novels.length})</span>
       </div>
 
       <Section title="Favorited Novels">
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6">
-          {favorites.map((f) => (
-            <div
-              key={f.novelId}
-              className="group relative flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
-            >
+          {novels.map((n) => (
+            <div key={n.id} className="group relative">
+              <NovelCard novel={n} />
               <button
-                onClick={() => navigate({ name: "novel", slug: f.novelSlug })}
-                className="block text-left"
-              >
-                <div className="relative aspect-[3/4] w-full overflow-hidden">
-                  <Cover title={f.novelTitle} hue={f.novelCoverHue} className="h-full w-full transition-transform duration-300 group-hover:scale-105" />
-                </div>
-                <div className="flex flex-1 flex-col gap-1 p-3">
-                  <h3 className="line-clamp-2 font-serif text-sm font-bold text-slate-900 group-hover:text-amber-600 dark:text-slate-100 dark:group-hover:text-amber-400">
-                    {f.novelTitle}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">by {f.author}</p>
-                  <div className="mt-auto flex items-center justify-between pt-1.5 text-[11px] text-slate-500 dark:text-slate-400">
-                    <span className="flex items-center gap-1">
-                      <BookOpen size={12} />
-                      {f.status}
-                    </span>
-                  </div>
-                </div>
-              </button>
-              <button
-                onClick={() => handleRemove(f.novelId)}
+                onClick={() => handleRemove(n.id)}
                 aria-label="Remove from favorites"
-                className="absolute right-2 top-2 rounded-full bg-white/90 p-1.5 text-rose-500 opacity-0 shadow-md transition-opacity hover:bg-rose-50 group-hover:opacity-100 dark:bg-slate-900/90"
+                className="absolute right-2 top-2 z-10 rounded-full bg-white/90 p-1.5 text-rose-500 opacity-0 shadow-md transition-opacity hover:bg-rose-50 group-hover:opacity-100 dark:bg-slate-900/90"
               >
                 <Trash2 size={14} />
               </button>
