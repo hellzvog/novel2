@@ -16,6 +16,7 @@ interface ChapterRow {
   number: number;
   title: string;
   published_at: string | null;
+  publish_at: string | null;
 }
 
 const ORIGIN = "https://addnovel.com";
@@ -96,7 +97,7 @@ async function buildFeed(baseUrl: string, anonKey: string): Promise<string> {
   const chapters = await supabaseFetch<ChapterRow[]>(
     baseUrl,
     anonKey,
-    `/rest/v1/chapters?select=novel_id,number,title,published_at&published=eq.true&order=published_at.desc&limit=50`,
+    `/rest/v1/chapters?select=novel_id,number,title,published_at,publish_at&published=eq.true&order=publish_at.desc,published_at.desc&limit=50`,
   );
   if (!chapters || chapters.length === 0) return emptyFeed();
 
@@ -108,7 +109,7 @@ async function buildFeed(baseUrl: string, anonKey: string): Promise<string> {
     const itemTitle = `${novel.title} - Chapter ${ch.number}: ${ch.title}`;
     const itemLink = `${ORIGIN}/read/${encodeURIComponent(novel.slug)}/${ch.number}`;
     const itemDesc = `Read ${novel.title} Chapter ${ch.number} on AddNovel.`;
-    const pubDate = toRfc822(ch.published_at ?? new Date().toISOString());
+    const pubDate = toRfc822(ch.publish_at ?? ch.published_at ?? new Date().toISOString());
 
     items.push(
       `    <item>

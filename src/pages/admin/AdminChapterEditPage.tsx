@@ -23,6 +23,10 @@ function jakartaNow(): string {
   return jakartaDateTimeParts(new Date());
 }
 
+function jakartaToday(): string {
+  return jakartaNow().slice(0, 10);
+}
+
 function toIsoFromJakarta(localStr: string): string {
   return new Date(localStr + "+07:00").toISOString();
 }
@@ -44,13 +48,15 @@ export default function AdminChapterEditPage({ slug, chapter }: { slug: string; 
   const [number, setNumber] = useState(1);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [publishedAt, setPublishedAt] = useState(new Date().toISOString().slice(0, 10));
+  const [publishedAt, setPublishedAt] = useState(jakartaToday());
   const [status, setStatus] = useState<"published" | "draft">("published");
   const [publishMode, setPublishMode] = useState<PublishMode>("now");
   const [scheduleDate, setScheduleDate] = useState(jakartaNow());
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [originalPublishAt, setOriginalPublishAt] = useState<string | null>(null);
+  const [originalPublished, setOriginalPublished] = useState(false);
 
   const wordCount = useMemo(() => {
     if (!content) return 0;
@@ -69,9 +75,11 @@ export default function AdminChapterEditPage({ slug, chapter }: { slug: string; 
           if (result) {
             setTitle(result.chapter.title);
             setContent(contentArrayToEditorHtml(result.chapter.content));
-            setPublishedAt(result.chapter.publishedAt || new Date().toISOString().slice(0, 10));
+            setPublishedAt(result.chapter.publishedAt || jakartaToday());
             setStatus(result.chapter.status);
             setNumber(result.chapter.number);
+            setOriginalPublishAt(result.chapter.publishAt);
+            setOriginalPublished(result.chapter.published);
             if (result.chapter.published) {
               setPublishMode("now");
             } else if (result.chapter.publishAt) {
@@ -102,6 +110,26 @@ export default function AdminChapterEditPage({ slug, chapter }: { slug: string; 
     try {
       const sanitized = sanitizeHtml(content);
       const contentArray = editorHtmlToContentArray(sanitized);
+
+      let publishAt: string | null;
+      if (status === "draft") {
+        publishAt = null;
+      } else if (publishMode === "schedule") {
+        publishAt = toIsoFromJakarta(scheduleDate);
+      } else {
+        // Publish Now
+        if (originalPublished && originalPublishAt) {
+          // Already-published chapter with exact timestamp: preserve it.
+          publishAt = originalPublishAt;
+        } else if (originalPublished && !originalPublishAt) {
+          // Legacy published chapter with null publish_at: keep null.
+          publishAt = null;
+        } else {
+          // New or previously unpublished chapter: stamp exact Publish Now moment.
+          publishAt = new Date().toISOString();
+        }
+      }
+
       const input = {
         number,
         title: title.trim(),
@@ -109,7 +137,7 @@ export default function AdminChapterEditPage({ slug, chapter }: { slug: string; 
         publishedAt,
         status,
         published: status === "draft" ? false : publishMode === "now",
-        publishAt: status === "draft" ? null : publishMode === "schedule" ? toIsoFromJakarta(scheduleDate) : null,
+        publishAt,
       };
       if (isEdit && chapter !== undefined) {
         await updateChapter(slug, chapter, input);

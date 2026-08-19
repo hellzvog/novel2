@@ -48,12 +48,16 @@ function jakartaNow(): string {
   return jakartaDateTimeParts(new Date());
 }
 
+function jakartaToday(): string {
+  return jakartaNow().slice(0, 10);
+}
+
 function toIsoFromJakarta(localStr: string): string {
   return new Date(localStr + "+07:00").toISOString();
 }
 
 function computePublishAt(index: number, mode: ScheduleMode, startDate: string, intervalHours: number): string | null {
-  if (mode === "immediate") return null;
+  if (mode === "immediate") return new Date().toISOString();
   const hours = mode === "daily" ? 24 : intervalHours;
   const base = new Date(toIsoFromJakarta(startDate));
   const publishTime = new Date(base.getTime() + index * hours * 3600_000);
@@ -182,13 +186,13 @@ export default function AdminImportPage() {
       const content = paragraphsToContent(parsed.paragraphs);
       const title = chapterTitle.trim() || selectedFile?.name.replace(/\.docx$/i, "") || `Chapter ${chapterNumber}`;
       const isPublished = chapterStatus === "draft" ? false : scheduleMode === "immediate";
-      const publishAt = chapterStatus === "draft" ? null : scheduleMode !== "immediate" ? toIsoFromJakarta(scheduleStart) : null;
+      const publishAt = chapterStatus === "draft" ? null : computePublishAt(0, scheduleMode, scheduleStart, intervalHours);
 
       if (existing) {
         await updateChapter(selectedNovel, chapterNumber, {
           title,
           content,
-          publishedAt: new Date().toISOString().slice(0, 10),
+          publishedAt: jakartaToday(),
           status: chapterStatus,
           published: isPublished,
           publishAt,
@@ -198,7 +202,7 @@ export default function AdminImportPage() {
           number: chapterNumber,
           title,
           content,
-          publishedAt: new Date().toISOString().slice(0, 10),
+          publishedAt: jakartaToday(),
           status: chapterStatus,
           published: isPublished,
           publishAt,
@@ -293,13 +297,13 @@ export default function AdminImportPage() {
       const content = paragraphsToContent(txtParsed.paragraphs);
       const title = chapterTitle.trim() || selectedFile?.name.replace(/\.txt$/i, "") || `Chapter ${chapterNumber}`;
       const isPublished = chapterStatus === "draft" ? false : scheduleMode === "immediate";
-      const publishAt = chapterStatus === "draft" ? null : scheduleMode !== "immediate" ? toIsoFromJakarta(scheduleStart) : null;
+      const publishAt = chapterStatus === "draft" ? null : computePublishAt(0, scheduleMode, scheduleStart, intervalHours);
 
       if (existing) {
         await updateChapter(selectedNovel, chapterNumber, {
           title,
           content,
-          publishedAt: new Date().toISOString().slice(0, 10),
+          publishedAt: jakartaToday(),
           status: chapterStatus,
           published: isPublished,
           publishAt,
@@ -309,7 +313,7 @@ export default function AdminImportPage() {
           number: chapterNumber,
           title,
           content,
-          publishedAt: new Date().toISOString().slice(0, 10),
+          publishedAt: jakartaToday(),
           status: chapterStatus,
           published: isPublished,
           publishAt,
@@ -433,7 +437,7 @@ export default function AdminImportPage() {
             number: item.number,
             title: item.title || `Chapter ${item.number}`,
             content: paragraphsToContent(item.paragraphs),
-            publishedAt: new Date().toISOString().slice(0, 10),
+            publishedAt: jakartaToday(),
             status: chapterStatus,
             published: isPublished,
             publishAt,
@@ -498,7 +502,7 @@ export default function AdminImportPage() {
             number: num,
             title,
             content: paragraphsToContent(result.paragraphs),
-            publishedAt: new Date().toISOString().slice(0, 10),
+            publishedAt: jakartaToday(),
             status: chapterStatus,
             published: isPublished,
             publishAt,
