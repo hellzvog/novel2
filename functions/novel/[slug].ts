@@ -119,6 +119,15 @@ function buildNovelMeta(novel: NovelRow, origin: string): string {
   ].join("\n    ");
 }
 
+function buildNoindexMeta(slug: string): string {
+  const canonical = `${CANONICAL_ORIGIN}/novel/${encodeURIComponent(slug)}`;
+  return [
+    `<title>Novel Not Found — ${SITE_NAME}</title>`,
+    `<meta name="robots" content="noindex, nofollow" />`,
+    `<link rel="canonical" href="${escapeAttr(canonical)}" />`,
+  ].join("\n    ");
+}
+
 function injectMeta(html: string, metaTags: string, jsonLd?: string): string {
   let out = html;
   out = out.replace(/<title>[\s\S]*?<\/title>/gi, "");
@@ -136,6 +145,10 @@ function injectMeta(html: string, metaTags: string, jsonLd?: string): string {
   );
   out = out.replace(
     /<meta\s+[^>]*?name\s*=\s*["']twitter:(?:card|title|description|image)["'][^>]*>/gi,
+    "",
+  );
+  out = out.replace(
+    /<meta\s+[^>]*?name\s*=\s*["']robots["'][^>]*>/gi,
     "",
   );
   if (jsonLd) {
@@ -181,6 +194,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     });
   };
   const spaResponse = () => buildResponse(html);
+  const notFoundResponse = (body: string) => {
+    const r = buildResponse(body);
+    return new Response(r.body, { status: 404, statusText: "Not Found", headers: r.headers });
+  };
 
   const baseUrl = env.VITE_SUPABASE_URL || env.SUPABASE_URL || "";
   const anonKey = env.VITE_SUPABASE_ANON_KEY || env.SUPABASE_ANON_KEY || "";
@@ -196,7 +213,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       `/rest/v1/novels?select=id,slug,title,author,synopsis,cover_url&slug=eq.${encodeURIComponent(slug)}`,
     );
     const novel = rows?.[0];
-    if (!novel) return spaResponse();
+    if (!novel) {
+      const modified = injectMeta(html, buildNoindexMeta(slug));
+      return notFoundResponse(modified);
+    }
 
     const metaTags = buildNovelMeta(novel, CANONICAL_ORIGIN);
     let jsonLd: string | undefined;

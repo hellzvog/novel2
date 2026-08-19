@@ -72,6 +72,11 @@ async function buildSitemap(): Promise<string> {
     `  <url>\n    <loc>${origin}/search</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>`
   );
 
+  // Latest updates page
+  urls.push(
+    `  <url>\n    <loc>${origin}/latest</loc>\n    <changefreq>hourly</changefreq>\n    <priority>0.9</priority>\n  </url>`
+  );
+
   // Static trust/compliance pages
   for (const p of [
     { path: "/about", freq: "monthly", priority: "0.5" },
@@ -90,7 +95,7 @@ async function buildSitemap(): Promise<string> {
     const genres = await supabaseFetch<GenreRow[]>(`/rest/v1/genres?select=slug`);
     for (const g of genres) {
       urls.push(
-        `  <url>\n    <loc>${origin}/search?genre=${escapeXml(encodeURIComponent(g.slug))}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>`
+        `  <url>\n    <loc>${origin}/genre/${escapeXml(g.slug)}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>`
       );
     }
   } catch { /* skip on error */ }

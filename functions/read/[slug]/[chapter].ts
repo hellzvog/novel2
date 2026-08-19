@@ -112,6 +112,15 @@ function buildChapterMeta(
   ].join("\n    ");
 }
 
+function buildNoindexMeta(slug: string, chapterNum: number): string {
+  const canonical = `${CANONICAL_ORIGIN}/read/${encodeURIComponent(slug)}/${chapterNum}`;
+  return [
+    `<title>Chapter Not Found — ${SITE_NAME}</title>`,
+    `<meta name="robots" content="noindex, nofollow" />`,
+    `<link rel="canonical" href="${escapeAttr(canonical)}" />`,
+  ].join("\n    ");
+}
+
 function injectMeta(html: string, metaTags: string, jsonLd?: string): string {
   let out = html;
   out = out.replace(/<title>[\s\S]*?<\/title>/gi, "");
@@ -129,6 +138,10 @@ function injectMeta(html: string, metaTags: string, jsonLd?: string): string {
   );
   out = out.replace(
     /<meta\s+[^>]*?name\s*=\s*["']twitter:(?:card|title|description|image)["'][^>]*>/gi,
+    "",
+  );
+  out = out.replace(
+    /<meta\s+[^>]*?name\s*=\s*["']robots["'][^>]*>/gi,
     "",
   );
   if (jsonLd) {
@@ -174,6 +187,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     });
   };
   const spaResponse = () => buildResponse(html);
+  const notFoundResponse = (body: string) => {
+    const r = buildResponse(body);
+    return new Response(r.body, { status: 404, statusText: "Not Found", headers: r.headers });
+  };
 
   const baseUrl = env.VITE_SUPABASE_URL || env.SUPABASE_URL || "";
   const anonKey = env.VITE_SUPABASE_ANON_KEY || env.SUPABASE_ANON_KEY || "";
@@ -193,14 +210,20 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       `/rest/v1/novels?select=id,slug,title,author,cover_url&slug=eq.${encodeURIComponent(slug)}`,
     );
     const novel = novels?.[0];
-    if (!novel) return spaResponse();
+    if (!novel) {
+      const modified = injectMeta(html, buildNoindexMeta(slug, chapterNum));
+      return notFoundResponse(modified);
+    }
 
     const chapters = await supabaseFetch<ChapterRow[]>(
       baseUrl,
       anonKey,
       `/rest/v1/chapters?select=id,number,title,published_at&novel_id=eq.${encodeURIComponent(novel.id)}&number=eq.${chapterNum}&published=eq.true`,
     );
-    if (!chapters || chapters.length === 0) return spaResponse();
+    if (!chapters || chapters.length === 0) {
+      const modified = injectMeta(html, buildNoindexMeta(slug, chapterNum));
+      return notFoundResponse(modified);
+    }
 
     const metaTags = buildChapterMeta(novel, chapterNum, CANONICAL_ORIGIN);
     let jsonLd: string | undefined;

@@ -145,7 +145,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const genre = rows?.[0];
     if (!genre) {
       const modified = injectMeta(html, buildNoindexMeta(slug));
-      return buildResponse(modified);
+      const r = buildResponse(modified);
+      return new Response(r.body, { status: 404, statusText: "Not Found", headers: r.headers });
     }
 
     const metaTags = buildGenreMeta(genre.name, genre.slug);

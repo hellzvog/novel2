@@ -60,12 +60,15 @@ export default function NovelDetailPage({ slug }: { slug: string }) {
     return () => { active = false; };
   }, [slug]);
 
+  const notFound = !loading && (!novel || !!error);
+
   useSeo({
     title: novel ? `${novel.title} - Read Online | AddNovel` : "Novel — AddNovel",
     description: novel ? trimDescription(novel.synopsis) : undefined,
     path: `/novel/${slug}`,
     type: "book",
     image: novel?.coverUrl ?? undefined,
+    robots: notFound ? "noindex" : undefined,
   });
   useJsonLd("ld-book", novel ? buildBookJsonLd({
     title: novel.title, author: novel.author, synopsis: stripHtml(novel.synopsis),

@@ -97,6 +97,8 @@ export default function ChapterReaderPage({ slug, chapter }: { slug: string; cha
     return () => { active = false; };
   }, [slug, chapter]);
 
+  const notFound = !loading && (!novel || !currentChapter || !!error);
+
   useSeo({
     title: novel && currentChapter ? `${novel.title} Chapter ${currentChapter.number} - AddNovel` : "Reading — AddNovel",
     description: novel && currentChapter ? `Read ${novel.title} Chapter ${currentChapter.number} online in English for free on AddNovel.` : undefined,
@@ -104,6 +106,7 @@ export default function ChapterReaderPage({ slug, chapter }: { slug: string; cha
     type: "article",
     image: novel?.coverUrl ?? undefined,
     publishedTime: currentChapter?.publishedAt,
+    robots: notFound ? "noindex" : undefined,
   });
   useJsonLd("ld-chapter", novel && currentChapter ? buildChapterJsonLd(
     { title: novel.title, author: novel.author, slug: novel.slug },
