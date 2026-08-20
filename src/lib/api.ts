@@ -303,18 +303,28 @@ async function fetchPublishedChaptersForNovels(novelIds: string[]): Promise<Map<
   return map;
 }
 
+interface ChapterSummaryRow {
+  novel_id: string;
+  number: number;
+  title: string;
+  published_at: string;
+  status: string;
+  published: boolean;
+  publish_at: string | null;
+}
+
 async function fetchAllChaptersForNovels(novelIds: string[]): Promise<Map<string, Chapter[]>> {
   const map = new Map<string, Chapter[]>();
   if (novelIds.length === 0) return map;
+  const token = getAdminToken();
   for (let i = 0; i < novelIds.length; i += 100) {
     const batch = novelIds.slice(i, i + 100);
-    const { data, error } = await supabase
-      .from("chapters")
-      .select(CHAPTER_COUNT_SELECT)
-      .in("novel_id", batch)
-      .order("number", { ascending: true });
+    const { data, error } = await supabase.rpc("admin_list_chapter_summaries", {
+      p_token: token,
+      p_novel_ids: batch,
+    });
     if (error) throw error;
-    for (const row of data ?? []) {
+    for (const row of (data ?? []) as ChapterSummaryRow[]) {
       const arr = map.get(row.novel_id) ?? [];
       arr.push(mapChapter(row as unknown as ChapterRow));
       map.set(row.novel_id, arr);
@@ -585,13 +595,13 @@ export async function listChapters(novelSlug: string): Promise<Chapter[]> {
 export async function listChaptersAdmin(novelSlug: string): Promise<Chapter[]> {
   const { data: novel } = await supabase.from("novels").select("id").eq("slug", novelSlug).maybeSingle();
   if (!novel) return [];
-  const { data, error } = await supabase
-    .from("chapters")
-    .select(CHAPTER_SELECT)
-    .eq("novel_id", novel.id)
-    .order("number", { ascending: true });
+  const token = getAdminToken();
+  const { data, error } = await supabase.rpc("admin_list_chapters", {
+    p_token: token,
+    p_novel_id: novel.id,
+  });
   if (error) throw error;
-  return (data ?? []).map(mapChapter);
+  return ((data ?? []) as ChapterRow[]).map(mapChapter);
 }
 
 export async function getChapter(novelSlug: string, chapterNumber: number): Promise<{ novel: Novel; chapter: Chapter } | null> {
@@ -671,6 +681,54 @@ export async function deleteChapter(novelSlug: string, chapterNumber: number): P
       p_chapter_number: chapterNumber,
     });
     if (error) throw error;
+  } catch (e) {
+    throw sanitizeError(e);
+  }
+}
+
+// ---------- Admin Dashboard ----------
+
+export interface DashboardOverview {
+  chapterCount: number;
+  userCount: number;
+  recentChapters: Array<{
+    title: string;
+    novelTitle: string;
+    number: number;
+    status: string;
+    createdAt: string;
+  }>;
+}
+
+export async function getAdminDashboardOverview(): Promise<DashboardOverview> {
+  try {
+    const token = getAdminToken();
+    const { data, error } = await supabase.rpc("admin_dashboard_overview", {
+      p_token: token,
+    });
+    if (error) throw error;
+    const raw = data as {
+      chapter_count: number;
+      user_count: number;
+      recent_chapters: Array<{
+        title: string;
+        number: number;
+        status: string;
+        created_at: string;
+        novel_title: string;
+      }>;
+    };
+    return {
+      chapterCount: raw.chapter_count ?? 0,
+      userCount: raw.user_count ?? 0,
+      recentChapters: (raw.recent_chapters ?? []).map((c) => ({
+        title: c.title,
+        novelTitle: c.novel_title ?? "—",
+        number: c.number,
+        status: c.status,
+        createdAt: c.created_at,
+      })),
+    };
   } catch (e) {
     throw sanitizeError(e);
   }

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { BookOpen, FileText, Users, TrendingUp, Loader2, AlertCircle } from "lucide-react";
-import { supabase } from "../../lib/supabase";
-import { listNovels, formatViews, type Novel } from "../../lib/api";
+import { listNovels, formatViews, getAdminDashboardOverview, type Novel, type DashboardOverview } from "../../lib/api";
 import { useRouter } from "../../lib/router";
 import AdminLayout from "../../components/admin/AdminLayout";
 
@@ -11,11 +10,17 @@ interface Stats {
   userCount: number;
 }
 
+const EMPTY_OVERVIEW: DashboardOverview = {
+  chapterCount: 0,
+  userCount: 0,
+  recentChapters: [],
+};
+
 export default function AdminDashboardPage() {
   const { navigate } = useRouter();
   const [stats, setStats] = useState<Stats>({ novelCount: 0, chapterCount: 0, userCount: 0 });
   const [recentNovels, setRecentNovels] = useState<Novel[]>([]);
-  const [recentChapters, setRecentChapters] = useState<{ title: string; novelTitle: string; number: number; status: string; createdAt: string }[]>([]);
+  const [recentChapters, setRecentChapters] = useState<DashboardOverview["recentChapters"]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,29 +28,14 @@ export default function AdminDashboardPage() {
     let active = true;
     (async () => {
       try {
-        const [novels, { count: chapterCount }, { count: userCount }] = await Promise.all([
+        const [novels, overview] = await Promise.all([
           listNovels(),
-          supabase.from("chapters").select("*", { count: "exact", head: true }),
-          supabase.from("profiles").select("*", { count: "exact", head: true }),
+          getAdminDashboardOverview(),
         ]);
         if (!active) return;
-        setStats({ novelCount: novels.length, chapterCount: chapterCount ?? 0, userCount: userCount ?? 0 });
+        setStats({ novelCount: novels.length, chapterCount: overview.chapterCount, userCount: overview.userCount });
         setRecentNovels([...novels].sort((a, b) => b.views - a.views).slice(0, 5));
-
-        const { data: ch } = await supabase
-          .from("chapters")
-          .select("title, number, status, created_at, novels!inner(title)")
-          .order("created_at", { ascending: false })
-          .limit(5);
-        if (active && ch) {
-          setRecentChapters(ch.map((c: any) => ({
-            title: c.title,
-            novelTitle: c.novels?.title ?? "—",
-            number: c.number,
-            status: c.status,
-            createdAt: c.created_at,
-          })));
-        }
+        setRecentChapters(overview.recentChapters);
         setError(null);
       } catch (e) {
         if (active) setError(e instanceof Error ? e.message : "Failed to load stats");
