@@ -186,13 +186,25 @@ export default function AdminImportPage() {
       const content = paragraphsToContent(parsed.paragraphs);
       const title = chapterTitle.trim() || selectedFile?.name.replace(/\.docx$/i, "") || `Chapter ${chapterNumber}`;
       const isPublished = chapterStatus === "draft" ? false : scheduleMode === "immediate";
-      const publishAt = chapterStatus === "draft" ? null : computePublishAt(0, scheduleMode, scheduleStart, intervalHours);
+
+      let publishedAt: string;
+      let publishAt: string | null;
+      if (existing && existing.published && isPublished) {
+        publishedAt = existing.publishedAt;
+        publishAt = existing.publishAt;
+      } else if (chapterStatus === "draft") {
+        publishedAt = jakartaToday();
+        publishAt = null;
+      } else {
+        publishedAt = jakartaToday();
+        publishAt = computePublishAt(0, scheduleMode, scheduleStart, intervalHours);
+      }
 
       if (existing) {
         await updateChapter(selectedNovel, chapterNumber, {
           title,
           content,
-          publishedAt: jakartaToday(),
+          publishedAt,
           status: chapterStatus,
           published: isPublished,
           publishAt,
@@ -202,7 +214,7 @@ export default function AdminImportPage() {
           number: chapterNumber,
           title,
           content,
-          publishedAt: jakartaToday(),
+          publishedAt,
           status: chapterStatus,
           published: isPublished,
           publishAt,
@@ -297,13 +309,25 @@ export default function AdminImportPage() {
       const content = paragraphsToContent(txtParsed.paragraphs);
       const title = chapterTitle.trim() || selectedFile?.name.replace(/\.txt$/i, "") || `Chapter ${chapterNumber}`;
       const isPublished = chapterStatus === "draft" ? false : scheduleMode === "immediate";
-      const publishAt = chapterStatus === "draft" ? null : computePublishAt(0, scheduleMode, scheduleStart, intervalHours);
+
+      let publishedAt: string;
+      let publishAt: string | null;
+      if (existing && existing.published && isPublished) {
+        publishedAt = existing.publishedAt;
+        publishAt = existing.publishAt;
+      } else if (chapterStatus === "draft") {
+        publishedAt = jakartaToday();
+        publishAt = null;
+      } else {
+        publishedAt = jakartaToday();
+        publishAt = computePublishAt(0, scheduleMode, scheduleStart, intervalHours);
+      }
 
       if (existing) {
         await updateChapter(selectedNovel, chapterNumber, {
           title,
           content,
-          publishedAt: jakartaToday(),
+          publishedAt,
           status: chapterStatus,
           published: isPublished,
           publishAt,
@@ -313,7 +337,7 @@ export default function AdminImportPage() {
           number: chapterNumber,
           title,
           content,
-          publishedAt: jakartaToday(),
+          publishedAt,
           status: chapterStatus,
           published: isPublished,
           publishAt,
