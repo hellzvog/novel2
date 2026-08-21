@@ -34,9 +34,9 @@ function escapeXml(s: string): string {
   });
 }
 
-function toRfc822(dateStr: string): string {
+function toRfc822(dateStr: string): string | null {
   const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return new Date().toUTCString();
+  if (isNaN(d.getTime())) return null;
   return d.toUTCString();
 }
 
@@ -97,31 +97,24 @@ async function buildFeed(baseUrl: string, anonKey: string): Promise<string> {
   const chapters = await supabaseFetch<ChapterRow[]>(
     baseUrl,
     anonKey,
-    `/rest/v1/chapters?select=novel_id,number,title,published_at,publish_at&published=eq.true&order=published_at.desc&limit=50`,
+    `/rest/v1/chapters?select=novel_id,number,title,published_at,publish_at&published=eq.true&order=published_at.desc,publish_at.desc.nullslast&limit=50`,
   );
   if (!chapters || chapters.length === 0) return emptyFeed();
 
-  // Secondary sort: within the same published_at date, newer publish_at first.
-  // Legacy rows with null publish_at sort last within their date group.
-  const sorted = [...chapters].sort((a, b) => {
-    if (a.published_at !== b.published_at) return 0;
-    const pa = a.publish_at ? new Date(a.publish_at).getTime() : 0;
-    const pb = b.publish_at ? new Date(b.publish_at).getTime() : 0;
-    return pb - pa;
-  });
-
   const items: string[] = [];
-  for (const ch of sorted) {
+  for (const ch of chapters) {
     const novel = novelMap.get(ch.novel_id);
     if (!novel) continue;
 
     const dateStr = ch.publish_at ?? ch.published_at;
     if (!dateStr) continue;
 
+    const pubDate = toRfc822(dateStr);
+    if (!pubDate) continue;
+
     const itemTitle = `${novel.title} - Chapter ${ch.number}: ${ch.title}`;
     const itemLink = `${ORIGIN}/read/${encodeURIComponent(novel.slug)}/${ch.number}`;
     const itemDesc = `Read ${novel.title} Chapter ${ch.number} on AddNovel.`;
-    const pubDate = toRfc822(dateStr);
 
     items.push(
       `    <item>
